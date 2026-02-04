@@ -19,6 +19,8 @@ namespace Trespasser
                 GameObject trespasserDisplay = UnityEngine.Object.Instantiate(__instance.m_MenuItems[2].m_Display);
                 ConfigureDisplay(trespasserDisplay, __instance.m_MenuItems[2].m_Display, __instance.m_MenuItems[3].m_Display);
 
+                // figure out on-select action to properly activate animation sequence like other difficulties do
+
                 __instance.m_MenuItems.Insert(2, new Panel_SelectExperience.XPModeMenuItem()
                 {
                     m_Display = trespasserDisplay,
@@ -36,10 +38,6 @@ namespace Trespasser
                 ConfigureSandboxStartGear(trespasser, stalker, interloper);
                 ConfigureSandboxAvailableRegions(trespasser, stalker, interloper);
                 ConfigureSandboxSceneLoadConditions(trespasser, stalker, interloper);
-
-                MehToolBox.ScriptExaminer.Dump(trespasser, ScriptExaminer.ScriptExaminerSettings.ForDump(7));
-                MehToolBox.ScriptExaminer.Compare(trespasser, stalker, ScriptExaminer.ScriptExaminerSettings.ForCompare(10));
-                MehToolBox.ScriptExaminer.Compare(trespasser, interloper, ScriptExaminer.ScriptExaminerSettings.ForCompare(10));
 
             }
 
@@ -97,9 +95,23 @@ namespace Trespasser
 
             private static void ConfigureDisplay(GameObject trespasser, GameObject stalker, GameObject interloper)
             {
+                ConfigureDisplayGeneral(trespasser,stalker,interloper);
+                ConfigureDisplayText(trespasser, stalker, interloper);
+            }
+
+
+            private static void ConfigureDisplayGeneral(GameObject trespasser, GameObject stalker, GameObject interloper)
+            {
                 trespasser.name = "TrespasserDifficultyDisplay";
                 trespasser.hideFlags = HideFlags.HideAndDontSave;
             }
+
+
+            private static void ConfigureDisplayText(GameObject trespasser, GameObject stalker, GameObject interloper)
+            {
+
+            }
+ 
 
             #endregion
         }
