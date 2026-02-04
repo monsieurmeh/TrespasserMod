@@ -21,7 +21,7 @@ namespace Trespasser
 
                 // figure out on-select action to properly activate animation sequence like other difficulties do
 
-                __instance.m_MenuItems.Insert(2, new Panel_SelectExperience.XPModeMenuItem()
+                __instance.m_MenuItems.Insert(3, new Panel_SelectExperience.XPModeMenuItem()
                 {
                     m_Display = trespasserDisplay,
                     m_SandboxConfig = trespasserConfig
