@@ -2,12 +2,15 @@
 using Il2Cpp;
 using Il2CppTLD.Gameplay;
 using MehToolBox;
+using MelonLoader;
 using UnityEngine;
 
 namespace Trespasser
 {
     internal class Patches
     {
+        static SandboxConfig TrespasserConfig;
+
         [HarmonyPatch(typeof(Panel_SelectExperience), nameof(Panel_SelectExperience.Initialize))]
         internal static class PanelSelectExperience_AddTrespasserMode
         {
@@ -26,6 +29,8 @@ namespace Trespasser
                     m_Display = trespasserDisplay,
                     m_SandboxConfig = trespasserConfig
                 });
+
+                TrespasserConfig = trespasserConfig;
             }
 
             #region sandbox
@@ -39,10 +44,12 @@ namespace Trespasser
                 ConfigureSandboxAvailableRegions(trespasser, stalker, interloper);
                 ConfigureSandboxSceneLoadConditions(trespasser, stalker, interloper);
 
+                MehToolBox.ScriptExaminer.Compare(trespasser, stalker);
             }
 
             private static void ConfigureSandboxGeneral(SandboxConfig trespasser, SandboxConfig stalker, SandboxConfig interloper)
             {
+                trespasser.name = "Trespasser";
                 trespasser.m_NumFeats = 2;
                 trespasser.m_ForceSpawnPoint = string.Empty;
                 trespasser.m_MissionServicesPrefab = stalker.m_MissionServicesPrefab;
@@ -50,6 +57,8 @@ namespace Trespasser
                 trespasser.m_Description = new LocalizedString() { m_LocalizationID = "Trespasser Description" };
                 trespasser.m_LoadingText = new LocalizedString() { m_LocalizationID = "Trespasser Loading Text" };
                 trespasser.m_SpriteName = stalker.m_SpriteName;
+                trespasser.m_ActiveTags = stalker.m_ActiveTags;
+                trespasser.m_SaveSlotType = SaveSlotType.SANDBOX;
             }
 
             private static void ConfigureSandboxBunkerSetup(SandboxConfig trespasser, SandboxConfig stalker, SandboxConfig interloper)
@@ -116,5 +125,18 @@ namespace Trespasser
             #endregion
         }
 
+        // needed to provide runtime gamemodeconfig for savegames when trying to display for loading from main menu
+        [HarmonyPatch(typeof(ExperienceModeManager), nameof(ExperienceModeManager.GetGameModeFromName))]
+        internal static class ExperienceModeManager_ProvideTrespasserGameModeOnGetGameModeFromName
+        {
+            internal static void Postfix(string gameModeName, ref GameModeConfig __result)
+            {
+                MelonLogger.Msg($"GameModeName: {gameModeName}");
+                if (gameModeName.Contains("Trespasser"))
+                {
+                    __result = TrespasserConfig;
+                }
+            }
+        }
     }
 }
