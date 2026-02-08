@@ -1,8 +1,7 @@
 ﻿using HarmonyLib;
 using Il2Cpp;
-using Il2CppTLD.AI;
 using Il2CppTLD.Gameplay;
-using MehToolBox;
+using Il2CppTLD.Gear;
 using MelonLoader;
 using UnityEngine;
 
@@ -32,7 +31,7 @@ namespace Trespasser
 
             internal static void ConfigureDisplay(GameObject trespasser, GameObject stalker, GameObject interloper)
             {
-                ConfigureDisplayGeneral(trespasser,stalker,interloper);
+                ConfigureDisplayGeneral(trespasser, stalker, interloper);
                 ConfigureDisplayText(trespasser, stalker, interloper);
             }
 
@@ -65,7 +64,6 @@ namespace Trespasser
         }
 
 
-
         [HarmonyPatch(typeof(ExperienceModeManager), nameof(ExperienceModeManager.SetGameModeConfig))]
         internal static class ExperienceModeManager_SetGameModeConfigDebug
         {
@@ -75,6 +73,51 @@ namespace Trespasser
                     || ExperienceModeManager.s_CurrentGameMode == null
                     || !ExperienceModeManager.s_CurrentGameMode.m_ModeName.m_LocalizationID.Contains("Trespasser");
             }
+        }
+
+
+        [HarmonyPatch(typeof(DisableObjectForGameMode), nameof(DisableObjectForGameMode.ShouldDisableForCurrentMode))]
+        internal static class DisableObjectForGameMode_MaybeAllowForCurrentMode
+        {
+            internal static void Postfix(DisableObjectForGameMode __instance, ref bool __result)
+            {
+                if (!__result) return;
+                if (!IsTrespasserMode()) return;
+                if (__instance.GetComponent<GearItem>() == null) return;
+
+                __result = Utils.RollChance(90f);
+                if (!__result)
+                {
+                    MelonLogger.Msg($"[Trespasser] Tag override: allowing {__instance.name} (10% roll) at {__instance.transform.position}");
+                }
+            }
+        }
+
+
+        // Overrides enum-based item disabling (m_XPModesToDisable).
+        // Items marked to disable for Interloper now get a 10% reprieve on Trespasser.
+        [HarmonyPatch(typeof(DisableObjectForXPMode), nameof(DisableObjectForXPMode.ShouldDisableForCurrentMode))]
+        internal static class DisableObjectForXPMode_MaybeAllowForCurrentMode
+        {
+            internal static void Postfix(DisableObjectForXPMode __instance, ref bool __result)
+            {
+                if (!__result) return;
+                if (!IsTrespasserMode()) return;
+                if (__instance.GetComponent<GearItem>() == null) return;
+
+                __result = Utils.RollChance(90f);
+                if (!__result)
+                {
+                    MelonLogger.Msg($"[Trespasser] XPMode override: allowing {__instance.name} (10% roll) at {__instance.transform.position}");
+                }
+            }
+        }
+
+
+        internal static bool IsTrespasserMode()
+        {
+            return ExperienceModeManager.s_CurrentGameMode != null
+                && ExperienceModeManager.s_CurrentGameMode.m_ModeName.m_LocalizationID.Contains("Trespasser");
         }
     }
 }
