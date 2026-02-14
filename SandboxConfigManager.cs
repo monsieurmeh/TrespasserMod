@@ -58,8 +58,8 @@ namespace Trespasser
             trespasser.m_ForceSpawnPoint = string.Empty;
             trespasser.m_MissionServicesPrefab = stalker.m_MissionServicesPrefab;
             trespasser.m_ModeName = new LocalizedString() { m_LocalizationID = "Trespasser" };
-            trespasser.m_Description = new LocalizedString() { m_LocalizationID = "Trespasser Description" };
-            trespasser.m_LoadingText = new LocalizedString() { m_LocalizationID = "Trespasser Loading Text" };
+            trespasser.m_Description = new LocalizedString() { m_LocalizationID = "A stepping stone between Stalker and Interloper. Start with a few matches and find sparse loot around the world that you wouldn't find on Interloper." };
+            trespasser.m_LoadingText = new LocalizedString() { m_LocalizationID = "Keep an eye out for rare loot!" };
             trespasser.m_SpriteName = stalker.m_SpriteName;
             trespasser.m_ActiveTags = interloper.m_ActiveTags;
             trespasser.m_SaveSlotType = SaveSlotType.SANDBOX;
