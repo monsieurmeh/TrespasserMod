@@ -16,6 +16,7 @@ namespace Trespasser
         private static Panel_SelectExperience.XPModeMenuItem mTrespasserMenuItem;
         private static Panel_SelectExperience.XPModeMenuItem mInterloperMenuItem;
         private static bool mHasFadedOut;
+        private static bool mIsSceneRestored;
 
 
         private static bool IsSameItem(Panel_SelectExperience.XPModeMenuItem a, Panel_SelectExperience.XPModeMenuItem b)
@@ -193,14 +194,8 @@ namespace Trespasser
             internal static void Postfix(DisableObjectForGameMode __instance, ref bool __result)
             {
                 if (!__result) return;
-                if (!IsTrespasserMode()) return;
-                if (__instance.GetComponent<GearItem>() == null) return;
-
-                __result = Utils.RollChance(90f);
-                if (!__result)
-                {
-                    MelonLogger.Msg($"[Trespasser] Tag override: allowing {__instance.name} (10% roll) at {__instance.transform.position}");
-                }
+                if (ShouldAllowBannedItem(__instance))
+                    __result = false;
             }
         }
 
@@ -211,22 +206,58 @@ namespace Trespasser
             internal static void Postfix(DisableObjectForXPMode __instance, ref bool __result)
             {
                 if (!__result) return;
-                if (!IsTrespasserMode()) return;
-                if (__instance.GetComponent<GearItem>() == null) return;
-
-                __result = Utils.RollChance(90f);
-                if (!__result)
-                {
-                    MelonLogger.Msg($"[Trespasser] XPMode override: allowing {__instance.name} (10% roll) at {__instance.transform.position}");
-                }
+                if (ShouldAllowBannedItem(__instance))
+                    __result = false;
             }
         }
 
 
-        internal static bool IsTrespasserMode()
+        [HarmonyPatch(typeof(SaveGameSystem), nameof(SaveGameSystem.LoadSceneData))]
+        internal static class SaveGameSystem_TrackFirstVisit
         {
-            return ExperienceModeManager.s_CurrentGameMode != null
-                && ExperienceModeManager.s_CurrentGameMode.m_ModeName.m_LocalizationID.Contains("Trespasser");
+            internal static void Postfix(bool __result) => mIsSceneRestored = __result;
+        }
+
+
+        private static bool ShouldAllowBannedItem(Component instance)
+        {
+            if (instance == null) return false;
+            if (mIsSceneRestored) return false;
+            if (!IsTrespasserMode()) return false;
+            if (instance.GetComponent<GearItem>() == null) return false;
+            var roll = new System.Random().NextDouble();
+            bool shouldAllow = roll <= Settings.Instance.InterloperBannedSpawnChance;
+            return shouldAllow;
+        }
+
+
+        internal static bool IsTrespasserMode() =>  ExperienceModeManager.s_CurrentGameMode != null && ExperienceModeManager.s_CurrentGameMode.m_ModeName.m_LocalizationID.Contains("Trespasser");
+
+
+        private static int GetCurrentResourceIndex()
+        {
+            GameModeConfig current = ExperienceModeManager.s_CurrentGameMode;
+            if (current == null) return -1;
+            ExperienceMode xp = current.m_XPMode;
+            if (xp == null) return -1;
+            return (int)xp.m_BaseResourceAvailability;
+        }
+
+
+        [HarmonyPatch(typeof(RandomSpawnObject), nameof(RandomSpawnObject.Start))]
+        internal static class RandomSpawnObject_FixInterloperQty
+        {
+            internal static void Prefix(RandomSpawnObject __instance)
+            {
+                if (!IsTrespasserMode()) return;
+
+                if (__instance.m_NumObjectsToEnableByLevel == null || __instance.m_NumObjectsToEnableByLevel.Length < 2) return;
+                int currentIndex = GetCurrentResourceIndex();
+                if (currentIndex < 0 || currentIndex >= __instance.m_NumObjectsToEnableByLevel.Length) return;
+                if (__instance.m_NumObjectsToEnableByLevel[currentIndex] != 0) return;
+                if (__instance.m_NumObjectsToEnableByLevel[currentIndex + 1] == 0) return;
+                __instance.m_NumObjectsToEnableByLevel[currentIndex] = Math.Max(1, (int)(__instance.m_NumObjectsToEnableByLevel[currentIndex + 1] * 0.5));
+            }
         }
     }
 }
