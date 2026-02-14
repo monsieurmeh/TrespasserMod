@@ -13,45 +13,40 @@ namespace Trespasser
         private const float BG_ALPHA_MAX = 0.4f;
         private const float BG_SCALE_MIN = 0.9f;
         private const float BG_SCALE_MAX = 1.1f;
-
-        // Cascade timing — absolute values matched from Interloper's native animation
         private const float ICON_DELAY = 0.33f;
         private const float ICON_FADE = 0.27f;
         private const float NAME_DELAY = 0.50f;
         private const float NAME_FADE = 0.17f;
         private const float BULLETS_DELAY = 0.57f;
         private const float BULLETS_FADE = 0.20f;
-        private const float WOLF_TOP_DELAY = 2.00f;
-        private const float WOLF_BOTTOM_DELAY = 3.00f;
-        private const float FLARE_DELAY = 1.00f;
-        private const float WOLF_SWEEP_DEGREES = 30f;
-        private const float WOLF_TOTAL_DURATION = 5f;
-        private const float WOLF_MOVE_DURATION = 5f;
-        private const float MACKENZIE_SCALE = 0.1875f;
-        private const float WOLF_SCALE = 0.75f;
-        private const float WOLF_ORBIT_PX = 200f;
-
-        // Blue magnesium flare — drives the cloned MovingBackground sprites
-        // Magnesium burns ~2200°C: blindingly white core, blue body, deep blue edges
+        private const float WOLF_TOP_DELAY = 5.00f;
+        private const float WOLF_BOTTOM_DELAY = 10.00f;
+        private const float FLARE_DELAY = 3.00f;
+        private const float WOLF_SWEEP_DEGREES = 60f;
+        private const float WOLF_TOTAL_DURATION = 30f;
+        private const float WOLF_MOVE_DURATION = 30f;
+        private const float MACKENZIE_SCALE = 0.15f;
+        private const float WOLF_SCALE = 0.50f;
+        private const float WOLF_ORBIT_PX = 100f;
         private const float FLARE_PEAK_ALPHA = 0.4f;
-        private const float FLARE_GROUP_A_RATIO = 0.705f;   // 0.208 / 0.295
-
-        // Sprite color model: R and G appear near peak via power curves, B always present
-        private const float FLARE_R_PEAK = 0.90f;           // red at full intensity (near-white)
-        private const float FLARE_R_POWER = 2.0f;           // steep falloff — only visible near peak
-        private const float FLARE_G_PEAK = 0.92f;           // green at full intensity
-        private const float FLARE_G_POWER = 1.5f;           // moderate falloff
-        private const float FLARE_B_BASE = 0.35f;           // deep blue ambient at zero intensity
-        private const float FLARE_B_RANGE = 0.65f;          // ramps to 1.0 at peak (0.35 + 0.65)
-
-        private const float FLARE_CORE_SIZE = 100f;          // bright center point size in pixels
-
-        // Scale animation — sprites breathe in sync with alpha pulses
-        // Group A: 0.2→0.8, Group B: 0.3→0.9 (matched from runtime sampling)
+        private const float FLARE_GROUP_A_RATIO = 0.705f;
+        private const float FLARE_R_PEAK = 0.90f;
+        private const float FLARE_R_POWER = 2.0f;
+        private const float FLARE_G_PEAK = 0.92f;
+        private const float FLARE_G_POWER = 1.5f;
+        private const float FLARE_B_BASE = 0.35f;
+        private const float FLARE_B_RANGE = 0.65f;
+        private const float FLARE_CORE_SIZE = 100f;
         private const float FLARE_SCALE_A_MIN = 0.2f;
         private const float FLARE_SCALE_A_MAX = 0.8f;
         private const float FLARE_SCALE_B_MIN = 0.3f;
         private const float FLARE_SCALE_B_MAX = 0.9f;
+
+        private static readonly Color NAME_COLOR = new(0.98f, 0.98f, 0.98f, 1f);
+        private static readonly Color BULLETS_COLOR = new(0.78f, 0.78f, 0.78f, 1f);
+        private static readonly Color ICON_COLOR = new(0.98f, 0.98f, 0.98f, 1f);
+        private static readonly Color FLARE_CORE_COLOR = new(0.98f, 0.98f, 0.98f, 1f);
+        private static readonly Vector2 FLARE_POSITION = new Vector2(50f, 50f);
 
         // Per-sprite pulse config: (period, pulseWidth, phaseOffset, peakRatio)
         // Indices 0-4 = Group A (BGtexture1-5), 5-8 = Group B (BGtexture6-9)
@@ -67,10 +62,6 @@ namespace Trespasser
             (5.50f, 3.00f, 0.900f, 1.000f),               // tex8
             (5.50f, 3.00f, 5.400f, 1.000f),               // tex9
         };
-
-        private static readonly Color NAME_COLOR = new(0.98f, 0.98f, 0.98f, 1f);
-        private static readonly Color BULLETS_COLOR = new(0.78f, 0.78f, 0.78f, 1f);
-        private static readonly Color ICON_COLOR = new(0.98f, 0.98f, 0.98f, 1f);
 
         private static GameObject mCanvasObject;
         private static RawImage mBgImage;
@@ -242,8 +233,8 @@ namespace Trespasser
             mSourceBgChildTransforms = childTransforms.ToArray();
 
             mMovingBgClone = UnityEngine.Object.Instantiate(source.gameObject, trespasserDisplay.transform);
-            mMovingBgClone.transform.localPosition += new Vector3(80, 100, 0);
-            mMovingBgClone.transform.localScale = source.localScale * 0.1f;
+            mMovingBgClone.transform.localPosition += new Vector3(FLARE_POSITION.x, FLARE_POSITION.y, 0);
+            mMovingBgClone.transform.localScale = source.localScale * 0.2f;
             mMovingBgClone.name = "TrespasserFlare";
 
             // Kill the cloned Animator — we drive alpha ourselves
@@ -298,7 +289,7 @@ namespace Trespasser
             mFlareCoreTexture.mainTexture = tex;
             mFlareCoreTexture.width = size;
             mFlareCoreTexture.height = size;
-            mFlareCoreTexture.color = new Color(0.7f, 0.85f, 1f, 0f);
+            mFlareCoreTexture.color = FLARE_CORE_COLOR;
             mFlareCoreTexture.depth = 999;
         }
 
@@ -401,22 +392,26 @@ namespace Trespasser
                 tmpFont = TMP_FontAsset.CreateFontAsset(gameFont);
             }
 
-            if (srcSprite != null)
-                mIconImage = CreateSpriteIcon(srcSprite, nguiCam, pixelSize);
-
-            RectTransform iconRect = mIconImage != null ?
-                mIconImage.gameObject.GetComponent<RectTransform>() : null;
-
+            // Compute text anchors from the original sprite position BEFORE icon scaling
             float iconCenterX, iconBottomY;
-            if (iconRect != null)
+            if (srcSprite != null)
             {
-                iconCenterX = (iconRect.anchorMin.x + iconRect.anchorMax.x) / 2f;
-                iconBottomY = iconRect.anchorMin.y;
+                Vector3 viewportCenter = nguiCam.WorldToViewportPoint(srcSprite.transform.position);
+                float vw = srcSprite.width * pixelSize / Screen.width;
+                float vh = srcSprite.height * pixelSize / Screen.height;
+                iconCenterX = viewportCenter.x;
+                iconBottomY = viewportCenter.y - vh / 2f;
             }
             else
             {
                 iconCenterX = 0.735f;
                 iconBottomY = 0.73f;
+            }
+
+            if (srcSprite != null)
+            {
+                mIconImage = CreateSpriteIcon(srcSprite, nguiCam, pixelSize);
+                mIconImage.rectTransform.anchoredPosition = new Vector2(-30f, 25f); //offet to line up with other icons after poor calculation attempt
             }
 
             const int NAME_FONT_SIZE = 28;
@@ -440,6 +435,7 @@ namespace Trespasser
                 nameRect.anchorMax = new Vector2(textRight, nameTop);
                 nameRect.offsetMin = Vector2.zero;
                 nameRect.offsetMax = Vector2.zero;
+                nameRect.anchoredPosition = new Vector2(0f, 10f); //annoying offset until i can get better with NGUI
             }
 
             if (srcBullets != null && tmpFont != null)
@@ -465,32 +461,27 @@ namespace Trespasser
 
         private static RawImage CreateSpriteIcon(UISprite srcSprite, Camera nguiCam, float pixelSize)
         {
-            UIAtlas atlas = srcSprite.atlas;
-            if (atlas == null || atlas.spriteMaterial == null || atlas.spriteMaterial.mainTexture == null)
-            {
+            Texture2D iconTex = LoadEmbeddedTexture("trespasser_bw_icon.png");
+            if (iconTex == null)
                 return null;
-            }
 
-            Texture mainTex = atlas.spriteMaterial.mainTexture;
-            UISpriteData spriteData = atlas.GetSprite(srcSprite.spriteName);
-            if (spriteData == null)
-            {
-                return null;
-            }
             GameObject iconObj = new("TrespasserIcon");
             iconObj.transform.SetParent(mCanvasObject.transform, false);
 
             RawImage iconImage = iconObj.AddComponent<RawImage>();
-            iconImage.texture = mainTex;
-            iconImage.uvRect = new Rect(
-                (float)spriteData.x / mainTex.width,
-                1f - (float)(spriteData.y + spriteData.height) / mainTex.height,
-                (float)spriteData.width / mainTex.width,
-                (float)spriteData.height / mainTex.height);
+            iconImage.texture = iconTex;
             iconImage.color = new Color(ICON_COLOR.r, ICON_COLOR.g, ICON_COLOR.b, 0f);
 
             RectTransform rect = iconObj.GetComponent<RectTransform>();
             PositionFromNguiWidget(rect, srcSprite, nguiCam, pixelSize);
+
+            // Stretch 50% larger from upper-left corner (expand right and down)
+            Vector2 min = rect.anchorMin;
+            Vector2 max = rect.anchorMax;
+            float w = max.x - min.x;
+            float h = max.y - min.y;
+            rect.anchorMax = new Vector2(max.x + w * 0.5f, max.y);
+            rect.anchorMin = new Vector2(min.x, min.y - h * 0.5f);
 
             return iconImage;
         }
