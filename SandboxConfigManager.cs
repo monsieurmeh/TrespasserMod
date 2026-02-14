@@ -290,7 +290,8 @@ namespace Trespasser
             trespasser.m_AvailableStartRegions = new Il2CppReferenceArray<Il2CppTLD.Scenes.RegionSpecification>(interloper.m_AvailableStartRegions.Length);
             for (int i = 0, iMax = interloper.m_AvailableStartRegions.Length; i < iMax; i++)
             {
-                trespasser.m_AvailableStartRegions[i] = UnityEngine.Object.Instantiate(interloper.m_AvailableStartRegions[i]);
+                //trespasser.m_AvailableStartRegions[i] = UnityEngine.Object.Instantiate(interloper.m_AvailableStartRegions[i]);
+                trespasser.m_AvailableStartRegions[i] = interloper.m_AvailableStartRegions[i];
             }
         }
 
@@ -299,7 +300,8 @@ namespace Trespasser
             trespasser.m_LoadConditions = new Il2CppReferenceArray<Il2CppTLD.Scenes.SceneLoadCondition>(interloper.m_LoadConditions.Length);
             for (int i = 0, iMax = interloper.m_LoadConditions.Length; i < iMax; i++)
             {
-                trespasser.m_LoadConditions[i] = UnityEngine.Object.Instantiate(interloper.m_LoadConditions[i]);
+                //trespasser.m_LoadConditions[i] = UnityEngine.Object.Instantiate(interloper.m_LoadConditions[i]);
+                trespasser.m_LoadConditions[i] = interloper.m_LoadConditions[i];
             }
         }
 
