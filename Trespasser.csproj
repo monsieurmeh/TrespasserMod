@@ -38,9 +38,6 @@
     <Reference Include="ModSettings">
       <HintPath>$(ModsPath)\ModSettings.dll</HintPath>
     </Reference>
-    <Reference Include="MehToolBox">
-      <HintPath>$(ModsPath)\MehToolBox.dll</HintPath>
-    </Reference>
   </ItemGroup>
 
   <Target Name="PostBuild" AfterTargets="PostBuildEvent">

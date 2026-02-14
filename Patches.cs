@@ -167,7 +167,6 @@ namespace Trespasser
         {
             internal static void Postfix(string gameModeName, ref GameModeConfig __result)
             {
-                MelonLogger.Msg($"GameModeName: {gameModeName}");
                 if (gameModeName.Contains("Trespasser"))
                 {
                     __result = SandboxConfigManager.TrespasserConfig;
