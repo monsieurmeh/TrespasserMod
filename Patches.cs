@@ -221,13 +221,43 @@ namespace Trespasser
 
         private static bool ShouldAllowBannedItem(Component instance)
         {
+            if (instance == null) return false;
             if (mIsSceneRestored) return false;
             if (!IsTrespasserMode()) return false;
             if (instance.GetComponent<GearItem>() == null) return false;
-            return instance.gameObject.scene.buildIndex != -1 || (new System.Random().NextDouble() < 0.10);
+            var roll = new System.Random().NextDouble();
+            bool shouldAllow = roll <= Settings.Instance.InterloperBannedSpawnChance;
+            return shouldAllow;
         }
 
 
         internal static bool IsTrespasserMode() =>  ExperienceModeManager.s_CurrentGameMode != null && ExperienceModeManager.s_CurrentGameMode.m_ModeName.m_LocalizationID.Contains("Trespasser");
+
+
+        private static int GetCurrentResourceIndex()
+        {
+            GameModeConfig current = ExperienceModeManager.s_CurrentGameMode;
+            if (current == null) return -1;
+            ExperienceMode xp = current.m_XPMode;
+            if (xp == null) return -1;
+            return (int)xp.m_BaseResourceAvailability;
+        }
+
+
+        [HarmonyPatch(typeof(RandomSpawnObject), nameof(RandomSpawnObject.Start))]
+        internal static class RandomSpawnObject_FixInterloperQty
+        {
+            internal static void Prefix(RandomSpawnObject __instance)
+            {
+                if (!IsTrespasserMode()) return;
+
+                if (__instance.m_NumObjectsToEnableByLevel == null || __instance.m_NumObjectsToEnableByLevel.Length < 2) return;
+                int currentIndex = GetCurrentResourceIndex();
+                if (currentIndex < 0 || currentIndex >= __instance.m_NumObjectsToEnableByLevel.Length) return;
+                if (__instance.m_NumObjectsToEnableByLevel[currentIndex] != 0) return;
+                if (__instance.m_NumObjectsToEnableByLevel[currentIndex + 1] == 0) return;
+                __instance.m_NumObjectsToEnableByLevel[currentIndex] = Math.Max(1, (int)(__instance.m_NumObjectsToEnableByLevel[currentIndex + 1] * 0.5));
+            }
+        }
     }
 }
