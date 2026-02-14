@@ -16,6 +16,7 @@ namespace Trespasser
         private static Panel_SelectExperience.XPModeMenuItem mTrespasserMenuItem;
         private static Panel_SelectExperience.XPModeMenuItem mInterloperMenuItem;
         private static bool mHasFadedOut;
+        private static bool mIsSceneRestored;
 
 
         private static bool IsSameItem(Panel_SelectExperience.XPModeMenuItem a, Panel_SelectExperience.XPModeMenuItem b)
@@ -193,14 +194,8 @@ namespace Trespasser
             internal static void Postfix(DisableObjectForGameMode __instance, ref bool __result)
             {
                 if (!__result) return;
-                if (!IsTrespasserMode()) return;
-                if (__instance.GetComponent<GearItem>() == null) return;
-
-                __result = Utils.RollChance(90f);
-                if (!__result)
-                {
-                    MelonLogger.Msg($"[Trespasser] Tag override: allowing {__instance.name} (10% roll) at {__instance.transform.position}");
-                }
+                if (ShouldAllowBannedItem(__instance))
+                    __result = false;
             }
         }
 
@@ -211,22 +206,28 @@ namespace Trespasser
             internal static void Postfix(DisableObjectForXPMode __instance, ref bool __result)
             {
                 if (!__result) return;
-                if (!IsTrespasserMode()) return;
-                if (__instance.GetComponent<GearItem>() == null) return;
-
-                __result = Utils.RollChance(90f);
-                if (!__result)
-                {
-                    MelonLogger.Msg($"[Trespasser] XPMode override: allowing {__instance.name} (10% roll) at {__instance.transform.position}");
-                }
+                if (ShouldAllowBannedItem(__instance))
+                    __result = false;
             }
         }
 
 
-        internal static bool IsTrespasserMode()
+        [HarmonyPatch(typeof(SaveGameSystem), nameof(SaveGameSystem.LoadSceneData))]
+        internal static class SaveGameSystem_TrackFirstVisit
         {
-            return ExperienceModeManager.s_CurrentGameMode != null
-                && ExperienceModeManager.s_CurrentGameMode.m_ModeName.m_LocalizationID.Contains("Trespasser");
+            internal static void Postfix(bool __result) => mIsSceneRestored = __result;
         }
+
+
+        private static bool ShouldAllowBannedItem(Component instance)
+        {
+            if (mIsSceneRestored) return false;
+            if (!IsTrespasserMode()) return false;
+            if (instance.GetComponent<GearItem>() == null) return false;
+            return instance.gameObject.scene.buildIndex != -1 || (new System.Random().NextDouble() < 0.10);
+        }
+
+
+        internal static bool IsTrespasserMode() =>  ExperienceModeManager.s_CurrentGameMode != null && ExperienceModeManager.s_CurrentGameMode.m_ModeName.m_LocalizationID.Contains("Trespasser");
     }
 }
