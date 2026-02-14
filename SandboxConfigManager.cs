@@ -63,6 +63,7 @@ namespace Trespasser
             trespasser.m_SpriteName = stalker.m_SpriteName;
             trespasser.m_ActiveTags = interloper.m_ActiveTags;
             trespasser.m_SaveSlotType = SaveSlotType.SANDBOX;
+
         }
 
         private static void ConfigureSandboxBunkerSetup(SandboxConfig trespasser, SandboxConfig stalker, SandboxConfig interloper)
@@ -147,10 +148,11 @@ namespace Trespasser
             ("GEAR_WaterSupplyPotable",  1),
             ("GEAR_CandyBar",            1),
             ("GEAR_BasicWoolHat",        1),
-            ("GEAR_FleeceMittens",       1),
             ("GEAR_LongUnderwear",       1),
             ("GEAR_WoolSocks",           1),
             ("GEAR_BasicShoes",          1),
+            ("GEAR_WorkPants",           1),
+            ("GEAR_LightShell",          1),
         };
 
         private static Il2CppReferenceArray<FixedGearItem>? BuildTrespasserFixedGear(SandboxConfig stalker)
@@ -160,7 +162,6 @@ namespace Trespasser
                 var stalkerGearLookup = BuildStalkerGearLookup(stalker);
                 if (stalkerGearLookup.Count == 0)
                 {
-                    MelonLogger.Warning("[Trespasser] Stalker gear lookup is empty — using Interloper defaults");
                     return null;
                 }
 
@@ -171,17 +172,11 @@ namespace Trespasser
                     if (fixedItem != null)
                     {
                         items.Add(fixedItem);
-                        MelonLogger.Msg($"[Trespasser]   + {prefab} x{count}");
-                    }
-                    else
-                    {
-                        MelonLogger.Warning($"[Trespasser]   ! {prefab} — could not resolve, skipping");
                     }
                 }
 
                 if (items.Count == 0)
                 {
-                    MelonLogger.Warning("[Trespasser] No gear items resolved — using Interloper defaults");
                     return null;
                 }
 
@@ -189,12 +184,10 @@ namespace Trespasser
                 for (int i = 0; i < items.Count; i++)
                     result[i] = items[i];
 
-                MelonLogger.Msg($"[Trespasser] Built custom start gear: {items.Count} items");
                 return result;
             }
             catch (Exception ex)
             {
-                MelonLogger.Error($"[Trespasser] Failed to build start gear: {ex.Message}");
                 return null;
             }
         }
@@ -218,7 +211,6 @@ namespace Trespasser
                 if (string.IsNullOrEmpty(prefabName)) continue;
 
                 lookup.TryAdd(prefabName, entry.m_GearItem);
-                MelonLogger.Msg($"[Trespasser] Stalker gear [{i}]: {prefabName} (GUID: {entry.m_GearItem.AssetGUID})");
             }
 
             return lookup;
@@ -237,7 +229,6 @@ namespace Trespasser
             }
             catch (Exception ex)
             {
-                MelonLogger.Warning($"[Trespasser] Failed to resolve asset ref: {ex.Message}");
                 return null;
             }
         }
@@ -259,30 +250,25 @@ namespace Trespasser
                 var gearPrefab = GearItem.LoadGearItemPrefab(prefabName);
                 if (gearPrefab == null)
                 {
-                    MelonLogger.Warning($"[Trespasser] Could not load prefab: {prefabName}");
                     return null;
                 }
 
                 var gearItemData = gearPrefab.m_GearItemData;
                 if (gearItemData == null)
                 {
-                    MelonLogger.Warning($"[Trespasser] Prefab {prefabName} has no GearItemData");
                     return null;
                 }
 
                 var prefabRef = gearItemData.PrefabReference;
                 if (prefabRef == null)
                 {
-                    MelonLogger.Warning($"[Trespasser] Prefab {prefabName} has no PrefabReference");
                     return null;
                 }
 
-                MelonLogger.Msg($"[Trespasser]   Fallback loaded {prefabName} (GUID: {prefabRef.AssetGUID})");
                 return CreateFixedGearItem(prefabRef, count);
             }
             catch (Exception ex)
             {
-                MelonLogger.Warning($"[Trespasser] Fallback load failed for {prefabName}: {ex.Message}");
                 return null;
             }
         }

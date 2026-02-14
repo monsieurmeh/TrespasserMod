@@ -44,7 +44,6 @@
   </ItemGroup>
 
   <Target Name="PostBuild" AfterTargets="PostBuildEvent">
-    <Exec Command="COPY &quot;$(TargetPath)&quot; &quot;$(ModsPath)&quot;" />
-    <Exec Command="COPY &quot;$(TargetPath)&quot; &quot;DLLs&quot;" />
+    <Exec Command="COPY &quot;$(TargetPath)&quot; &quot;$(ModsPath)&quot;" ContinueOnError="WarnAndContinue" />
   </Target>
 </Project>
