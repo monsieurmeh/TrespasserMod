@@ -153,6 +153,7 @@ namespace Trespasser
             ("GEAR_BasicShoes",          1),
             ("GEAR_WorkPants",           1),
             ("GEAR_LightShell",          1),
+            ("GEAR_RecycledCan",         1),
         };
 
         private static Il2CppReferenceArray<FixedGearItem>? BuildTrespasserFixedGear(SandboxConfig stalker)
