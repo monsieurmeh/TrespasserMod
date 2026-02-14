@@ -111,7 +111,7 @@ namespace Trespasser
             xp.m_ConditonRecoveryWhileAwakeScale = 0.65f;
             xp.m_DecayScale = 1.65f;
             xp.m_GearSpawnChanceScale = 0.275f;
-            xp.m_ChanceForEmptyContainer = 85;
+            xp.m_ChanceForEmptyContainer = 82;
             xp.m_StruggleTapStrengthScale = 0.88f;
             xp.m_StrugglePlayerDamageReceivedScale = 1.325f;
             xp.m_StrugglePlayerClothingDamageScale = 1.325f;
