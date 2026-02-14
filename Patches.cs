@@ -50,7 +50,7 @@ namespace Trespasser
                 Panel_SelectExperience.XPModeMenuItem interloperItem = __instance.m_MenuItems[3];
                 mInterloperMenuItem = interloperItem;
                 GameObject trespasserDisplay = UnityEngine.Object.Instantiate(interloperItem.m_Display);
-                trespasserDisplay.name = "TrespasserDifficultyDisplay";
+                trespasserDisplay.name = "Trespasser";
                 trespasserDisplay.hideFlags = HideFlags.HideAndDontSave;
                 trespasserDisplay.transform.SetParent(interloperItem.m_Display.transform.parent, false);
 

@@ -206,7 +206,7 @@ namespace Trespasser
             if (srcBullets != null && tmpFont != null)
             {
                 mBulletsText = CreateTextElement("TrespasserBullets",
-                    "\u2022  A stepping stone; A dip in the freezing lake.\n" +
+                    "\u2022  A stepping stone. Dip your toes in the freezing lake.\n" +
                     "\u2022  Rare chance for Interloper-banned items.\n" +
                     "\u2022  Tuned to challenge without Interloper's\n" +
                     "    desolation or Stalker's plenty.",
