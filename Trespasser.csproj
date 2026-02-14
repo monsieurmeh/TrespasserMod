@@ -46,4 +46,8 @@
   <Target Name="PostBuild" AfterTargets="PostBuildEvent">
     <Exec Command="COPY &quot;$(TargetPath)&quot; &quot;$(ModsPath)&quot;" ContinueOnError="WarnAndContinue" />
   </Target>
+  
+  <ItemGroup>
+    <EmbeddedResource Include="Assets\**" />
+  </ItemGroup>
 </Project>

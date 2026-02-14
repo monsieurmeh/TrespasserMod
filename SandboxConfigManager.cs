@@ -44,7 +44,7 @@ namespace Trespasser
             ConfigureSandboxAvailableRegions(trespasser, stalker, interloper);
             ConfigureSandboxSceneLoadConditions(trespasser, stalker, interloper);
 
-            MehToolBox.ScriptExaminer.Compare(trespasser, stalker);
+            MehToolBox.Examiner.Compare(trespasser, stalker);
         }
 
         #endregion
