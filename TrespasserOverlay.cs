@@ -103,7 +103,6 @@ namespace Trespasser
         // Temporary diagnostics — scale sampler on original MovingBackground
         private static Transform mSourceBgTransform;
         private static Transform[] mSourceBgChildTransforms;
-        private static object mScaleSamplerCoroutine;
 
         internal static bool IsSelectFading => mIsSelectFading;
         internal static bool IsDeselectFading => mIsDeselectFading;
@@ -139,7 +138,6 @@ namespace Trespasser
             StopActiveCoroutine();
             mIsSelectFading = true;
             mIsDeselectFading = false;
-            StartScaleSampler();
             mActiveCoroutine = MelonCoroutines.Start(FadeInCoroutine(duration,
                 () => { mIsSelectFading = false; }));
         }
@@ -148,7 +146,6 @@ namespace Trespasser
         internal static void FadeOut(float duration)
         {
             StopActiveCoroutine();
-            StopScaleSampler();
             mIsDeselectFading = true;
             mIsSelectFading = false;
             mActiveCoroutine = MelonCoroutines.Start(FadeOutCoroutine(duration,
@@ -174,7 +171,6 @@ namespace Trespasser
         {
             StopActiveCoroutine();
             StopFlareAnimation();
-            StopScaleSampler();
             mSourceBgTransform = null;
             mSourceBgChildTransforms = null;
             mIsSelectFading = false;
@@ -322,59 +318,6 @@ namespace Trespasser
             {
                 MelonCoroutines.Stop(mFlareCoroutine);
                 mFlareCoroutine = null;
-            }
-        }
-
-
-        private static void StartScaleSampler()
-        {
-            StopScaleSampler();
-            if (mSourceBgChildTransforms == null || mSourceBgChildTransforms.Length == 0)
-                return;
-            mScaleSamplerCoroutine = MelonCoroutines.Start(ScaleSamplerCoroutine());
-        }
-
-
-        private static void StopScaleSampler()
-        {
-            if (mScaleSamplerCoroutine != null)
-            {
-                MelonCoroutines.Stop(mScaleSamplerCoroutine);
-                mScaleSamplerCoroutine = null;
-            }
-        }
-
-
-        private static IEnumerator ScaleSamplerCoroutine()
-        {
-            float elapsed = 0f;
-            WaitForSeconds wait = new(0.025f);
-
-            string header = "t";
-            for (int i = 0; i < mSourceBgChildTransforms.Length; i++)
-                header += $",{mSourceBgChildTransforms[i].name}_sx,{mSourceBgChildTransforms[i].name}_sy";
-            header += ",parent_sx,parent_sy";
-            MelonLogger.Msg($"[ScaleSampler] {header}");
-
-            while (true)
-            {
-                elapsed += 0.025f;
-                string line = $"{elapsed:F3}";
-
-                for (int i = 0; i < mSourceBgChildTransforms.Length; i++)
-                {
-                    Vector3 s = mSourceBgChildTransforms[i].localScale;
-                    line += $",{s.x:F4},{s.y:F4}";
-                }
-
-                if (mSourceBgTransform != null)
-                {
-                    Vector3 ps = mSourceBgTransform.localScale;
-                    line += $",{ps.x:F4},{ps.y:F4}";
-                }
-
-                MelonLogger.Msg($"[ScaleSampler] {line}");
-                yield return wait;
             }
         }
 
