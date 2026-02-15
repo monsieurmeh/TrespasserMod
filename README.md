@@ -10,16 +10,16 @@ I built this mod for multiple reasons:
 # Features #
 * Distinct, selectable difficutly mode between Interloper and Stalker called Trespasser with original art from Flower Field.
 * Starting Gear:
-*   3 Cardboard Matches (not 3 packs... **3 matches**)
-*   Running Shoes
-*   Water
-*   Candy Bar
-*   Recycled Can
-*   Socks
-*   Work Pants
-*   Light Shell
-*   Wool Toque
-*   Thermal Underwear
+  * 3 Cardboard Matches (not 3 packs... **3 matches**)
+  * Running Shoes
+  * Water
+  *   Candy Bar
+  *   Recycled Can
+  *   Socks
+  *   Work Pants
+  *   Light Shell
+  *   Wool Toque
+  *   Thermal Underwear
 * Interloper-**like** loot table: Although the standard interloper loot table is used (baseline resource availability = LOW) this mod allows a rare chance (default: 10%) for interloper-banned items like hatches, axes and other situation-specific entries to spawn. The 20 hatches you found last stalker game? Prepare to find two, if you're lucky!
 * Reduced but not empty prepper caches: The above chance to find rare loot will be used to inversely de-populate prepper caches from the stalker loot table, allowing you to still identify which caches are which but providing substantially less loot overall. This will compound with the chance to spawn interloper banned items, resulting in almost no chance to get such items in prepper caches.
 * Custom stats tracking for Trespasser (FUTURE): Adds a new column and permanent tracking to the journal statistics screen.
