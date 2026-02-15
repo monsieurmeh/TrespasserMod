@@ -167,7 +167,6 @@ namespace Trespasser
         {
             internal static void Postfix(string gameModeName, ref GameModeConfig __result)
             {
-                MelonLogger.Msg($"GameModeName: {gameModeName}");
                 if (gameModeName.Contains("Trespasser"))
                 {
                     __result = SandboxConfigManager.TrespasserConfig;
@@ -226,7 +225,9 @@ namespace Trespasser
             if (!IsTrespasserMode()) return false;
             if (instance.GetComponent<GearItem>() == null) return false;
             var roll = new System.Random().NextDouble();
-            bool shouldAllow = roll <= Settings.Instance.InterloperBannedSpawnChance;
+            bool shouldAllow = roll <= (Settings.Instance.InterloperBannedSpawnChance * 0.01f);
+            if (shouldAllow && !string.IsNullOrEmpty(instance.gameObject.scene.name))
+                MelonLogger.Msg($"Allowing spawn of {instance.name} at {instance.gameObject.transform.position}");
             return shouldAllow;
         }
 
