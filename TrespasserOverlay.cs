@@ -28,6 +28,7 @@ namespace Trespasser
         private const float MACKENZIE_SCALE = 0.5f;
         private const float WOLF_SCALE = 0.5f;
         private const float WOLF_ORBIT_PX = 600f;
+        private const float WOLF_FINAL_POSITION = 0f;  // NOTE: Adjusting this will NOT adjust rotation - ONLY orbit position! It is meant to match the orbit animation to the actual rotation of the wolf texture!
         private const float FLARE_PEAK_ALPHA = 0.4f;
         private const float FLARE_GROUP_A_RATIO = 0.705f;
         private const float FLARE_R_PEAK = 0.90f;
@@ -649,8 +650,8 @@ namespace Trespasser
 
             CreateFgChild("TrespasserWolfBottom", wolfBotTex, out mWolfBottomImage, out mWolfBottomRect);
 
-            SetWolfOrbitalState(mWolfTopRect, -WOLF_SWEEP_DEGREES, 0f, mWolfTopSize);
-            SetWolfOrbitalState(mWolfBottomRect, 180f - WOLF_SWEEP_DEGREES, 180f, mWolfBotSize);
+            SetWolfOrbitalState(mWolfTopRect, WOLF_FINAL_POSITION - WOLF_SWEEP_DEGREES, WOLF_FINAL_POSITION, mWolfTopSize);
+            SetWolfOrbitalState(mWolfBottomRect, WOLF_FINAL_POSITION + 180f - WOLF_SWEEP_DEGREES, WOLF_FINAL_POSITION + 180f, mWolfBotSize);
         }
 
 
@@ -723,9 +724,9 @@ namespace Trespasser
             if (mWolfBottomImage != null)
                 mWolfBottomImage.color = new Color(1f, 1f, 1f, 0f);
             if (mWolfTopRect != null)
-                SetWolfOrbitalState(mWolfTopRect, -WOLF_SWEEP_DEGREES, 0f, mWolfTopSize);
+                SetWolfOrbitalState(mWolfTopRect, WOLF_FINAL_POSITION - WOLF_SWEEP_DEGREES, WOLF_FINAL_POSITION, mWolfTopSize);
             if (mWolfBottomRect != null)
-                SetWolfOrbitalState(mWolfBottomRect, 180f - WOLF_SWEEP_DEGREES, 180f, mWolfBotSize);
+                SetWolfOrbitalState(mWolfBottomRect, WOLF_FINAL_POSITION + 180f - WOLF_SWEEP_DEGREES, WOLF_FINAL_POSITION + 180f, mWolfBotSize);
             mFlareMasterAlpha = 0f;
             StopFlareAnimation();
             if (mMovingBgClone != null)
@@ -795,10 +796,10 @@ namespace Trespasser
                 mFlareMasterAlpha = DescElementAlpha(elapsed, FLARE_DELAY, duration);
 
                 float moveT = Mathf.SmoothStep(0f, 1f, Mathf.Clamp01(elapsed / WOLF_MOVE_DURATION));
-                float topAngle = Mathf.Lerp(-WOLF_SWEEP_DEGREES, 0f, moveT);
-                float botAngle = Mathf.Lerp(180f - WOLF_SWEEP_DEGREES, 180f, moveT);
-                SetWolfOrbitalState(mWolfTopRect, topAngle, 0f, mWolfTopSize);
-                SetWolfOrbitalState(mWolfBottomRect, botAngle, 180f, mWolfBotSize);
+                float topAngle = Mathf.Lerp(WOLF_FINAL_POSITION - WOLF_SWEEP_DEGREES, WOLF_FINAL_POSITION, moveT);
+                float botAngle = Mathf.Lerp(WOLF_FINAL_POSITION + 180f - WOLF_SWEEP_DEGREES, WOLF_FINAL_POSITION + 180f, moveT);
+                SetWolfOrbitalState(mWolfTopRect, topAngle, WOLF_FINAL_POSITION, mWolfTopSize);
+                SetWolfOrbitalState(mWolfBottomRect, botAngle, WOLF_FINAL_POSITION + 180f, mWolfBotSize);
 
                 float wolfTopAlpha = DescElementAlpha(elapsed, WOLF_TOP_DELAY, wolfTopFade);
                 mWolfTopImage.color = new Color(1f, 1f, 1f, wolfTopAlpha);
@@ -821,8 +822,8 @@ namespace Trespasser
             mFgImage.color = new Color(1f, 1f, 1f, 1f);
             mWolfTopImage.color = new Color(1f, 1f, 1f, 1f);
             mWolfBottomImage.color = new Color(1f, 1f, 1f, 1f);
-            SetWolfOrbitalState(mWolfTopRect, 0f, 0f, mWolfTopSize);
-            SetWolfOrbitalState(mWolfBottomRect, 180f, 180f, mWolfBotSize);
+            SetWolfOrbitalState(mWolfTopRect, WOLF_FINAL_POSITION, WOLF_FINAL_POSITION, mWolfTopSize);
+            SetWolfOrbitalState(mWolfBottomRect, WOLF_FINAL_POSITION + 180f, WOLF_FINAL_POSITION + 180f, mWolfBotSize);
             mFlareMasterAlpha = 1f;
             SetDescAlpha(1f);
             onComplete?.Invoke();
