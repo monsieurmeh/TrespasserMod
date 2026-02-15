@@ -53,7 +53,7 @@ namespace Trespasser
         private static readonly Color BULLETS_COLOR = new(0.78f, 0.78f, 0.78f, 1f);
         private static readonly Color ICON_COLOR = new(0.98f, 0.98f, 0.98f, 1f);
         private static readonly Color FLARE_CORE_COLOR = new(0.98f, 0.98f, 0.98f, 1f);
-        private static readonly Vector2 FLARE_POSITION = new Vector2(25f, 95f);
+        private static readonly Vector2 FLARE_POSITION = new Vector2(15f, 100f);
 
         // Per-sprite pulse config: (period, pulseWidth, phaseOffset, peakRatio)
         // Indices 0-4 = Group A (BGtexture1-5), 5-8 = Group B (BGtexture6-9)
