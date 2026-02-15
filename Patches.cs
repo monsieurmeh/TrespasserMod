@@ -18,6 +18,10 @@ namespace Trespasser
         private static Panel_SelectExperience.XPModeMenuItem mInterloperMenuItem;
         private static bool mHasFadedOut;
         private static bool mIsSceneRestored;
+        private static Texture2D mCachedBwIcon;
+        private static Texture2D mCachedFullColor;
+        private static bool mSandboxWasTrespasser;
+        private static int mHiddenSandboxAnimIndex = -1;
 
 
         private static bool IsSameItem(Panel_SelectExperience.XPModeMenuItem a, Panel_SelectExperience.XPModeMenuItem b)
@@ -234,6 +238,153 @@ namespace Trespasser
 
 
         internal static bool IsTrespasserMode() =>  ExperienceModeManager.s_CurrentGameMode != null && ExperienceModeManager.s_CurrentGameMode.m_ModeName.m_LocalizationID.Contains("Trespasser");
+
+
+        private static bool IsTrespasserSave(SaveSlotInfo slotInfo)
+        {
+            if (slotInfo == null) return false;
+            GameModeConfig config = slotInfo.m_GameModeConfig;
+            if (config == null) return false;
+            return config.m_ModeName != null
+                && config.m_ModeName.m_LocalizationID != null
+                && config.m_ModeName.m_LocalizationID.Contains("Trespasser");
+        }
+
+
+        private static Texture2D GetCachedTexture(ref Texture2D cache, string filename)
+        {
+            if (cache == null)
+                cache = TrespasserOverlay.LoadEmbeddedTexture(filename);
+            return cache;
+        }
+
+
+        [HarmonyPatch(typeof(Panel_PauseMenu), nameof(Panel_PauseMenu.SetExperienceModeIcon))]
+        internal static class PanelPauseMenu_UseTrespasserIcon
+        {
+            private static GameObject mOverlayGo;
+            private static UITexture mOverlayTexture;
+
+            internal static void Postfix(Panel_PauseMenu __instance)
+            {
+                MelonLogger.Msg("[Trespasser] SetExperienceModeIcon postfix fired");
+
+                UISprite iconSprite = __instance.m_GameModeIcon;
+                if (iconSprite == null)
+                {
+                    MelonLogger.Msg("[Trespasser] m_GameModeIcon is null");
+                    return;
+                }
+
+                bool isTrespasser = IsTrespasserMode();
+                MelonLogger.Msg($"[Trespasser] IsTrespasserMode={isTrespasser}, sprite={iconSprite.spriteName}");
+
+                if (!isTrespasser)
+                {
+                    if (mOverlayGo != null)
+                        mOverlayGo.SetActive(false);
+                    iconSprite.enabled = true;
+                    return;
+                }
+
+                Texture2D tex = GetCachedTexture(ref mCachedBwIcon, "trespasser_bw_icon.png");
+                if (tex == null)
+                {
+                    MelonLogger.Msg("[Trespasser] Failed to load trespasser_bw_icon.png");
+                    return;
+                }
+
+                iconSprite.enabled = false;
+
+                if (mOverlayTexture == null || mOverlayGo == null)
+                {
+                    MelonLogger.Msg("[Trespasser] Creating pause icon overlay");
+                    mOverlayGo = new GameObject("TrespasserPauseIcon");
+                    mOverlayGo.transform.SetParent(iconSprite.transform.parent, false);
+                    mOverlayGo.transform.localPosition = iconSprite.transform.localPosition;
+                    mOverlayGo.transform.localScale = iconSprite.transform.localScale;
+                    mOverlayTexture = mOverlayGo.AddComponent<UITexture>();
+                    mOverlayTexture.depth = iconSprite.depth + 1;
+                }
+
+                mOverlayTexture.mainTexture = tex;
+                mOverlayTexture.width = iconSprite.width;
+                mOverlayTexture.height = iconSprite.height;
+                mOverlayGo.SetActive(true);
+                MelonLogger.Msg($"[Trespasser] Overlay active, size={iconSprite.width}x{iconSprite.height}");
+            }
+        }
+
+
+        [HarmonyPatch(typeof(Panel_ChooseSandbox), nameof(Panel_ChooseSandbox.RefreshDetails))]
+        internal static class PanelChooseSandbox_TrespasserOverlay
+        {
+            internal static void Postfix(Panel_ChooseSandbox __instance, SaveSlotInfo slotInfo)
+            {
+                bool isTrespasser = IsTrespasserSave(slotInfo);
+
+                if (isTrespasser && !mSandboxWasTrespasser)
+                {
+                    HideActiveSandboxAnim(__instance);
+                    if (TrespasserOverlay.IsInitialized)
+                        TrespasserOverlay.FadeIn(SELECT_DURATION, showDesc: false);
+                }
+                else if (!isTrespasser && mSandboxWasTrespasser)
+                {
+                    RestoreSandboxAnim(__instance);
+                    if (TrespasserOverlay.IsInitialized)
+                        TrespasserOverlay.FadeOut(DESELECT_DURATION);
+                }
+
+                mSandboxWasTrespasser = isTrespasser;
+            }
+        }
+
+
+        [HarmonyPatch(typeof(Panel_ChooseSandbox), nameof(Panel_ChooseSandbox.Enable))]
+        internal static class PanelChooseSandbox_OverlayLifecycle
+        {
+            internal static void Postfix(Panel_ChooseSandbox __instance, bool enable)
+            {
+                if (!enable)
+                {
+                    RestoreSandboxAnim(__instance);
+                    TrespasserOverlay.Hide();
+                    mSandboxWasTrespasser = false;
+                }
+            }
+        }
+
+
+        private static void HideActiveSandboxAnim(Panel_ChooseSandbox panel)
+        {
+            Il2CppSystem.Collections.Generic.List<Panel_ChooseSandbox.AnimMenuItems> items = panel.m_AnimMenuItems;
+            if (items == null) return;
+            for (int i = 0; i < items.Count; i++)
+            {
+                Panel_ChooseSandbox.AnimMenuItems item = items[i];
+                if (item?.m_Display != null && item.m_Display.activeSelf)
+                {
+                    item.m_Display.SetActive(false);
+                    mHiddenSandboxAnimIndex = i;
+                    return;
+                }
+            }
+        }
+
+
+        private static void RestoreSandboxAnim(Panel_ChooseSandbox panel)
+        {
+            if (mHiddenSandboxAnimIndex < 0) return;
+            Il2CppSystem.Collections.Generic.List<Panel_ChooseSandbox.AnimMenuItems> items = panel.m_AnimMenuItems;
+            if (items != null && mHiddenSandboxAnimIndex < items.Count)
+            {
+                Panel_ChooseSandbox.AnimMenuItems item = items[mHiddenSandboxAnimIndex];
+                if (item?.m_Display != null)
+                    item.m_Display.SetActive(true);
+            }
+            mHiddenSandboxAnimIndex = -1;
+        }
 
 
         private static int GetCurrentResourceIndex()
