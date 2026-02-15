@@ -4,6 +4,7 @@ using Il2CppTLD.Gameplay;
 using Il2CppTLD.Gear;
 using MelonLoader;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 
 namespace Trespasser
 {
@@ -242,6 +243,65 @@ namespace Trespasser
             ExperienceMode xp = current.m_XPMode;
             if (xp == null) return -1;
             return (int)xp.m_BaseResourceAvailability;
+        }
+
+
+        private static bool IsBunkerScene(string sceneName)
+            => !string.IsNullOrEmpty(sceneName) && SandboxConfigManager.BunkerSceneNames.Contains(sceneName);
+
+
+        private static bool ShouldRemoveBunkerItem()
+        {
+            double roll = new System.Random().NextDouble();
+            double removeChance = 1.0 - (Settings.Instance.InterloperBannedSpawnChance * 0.01);
+            return roll < removeChance;
+        }
+
+
+        [HarmonyPatch(typeof(GearItem), nameof(GearItem.ManualStart))]
+        internal static class GearItem_MaybeRemoveFromBunker
+        {
+            internal static void Postfix(GearItem __instance)
+            {
+                if (!IsTrespasserMode()) return;
+                if (mIsSceneRestored) return;
+                if (!IsBunkerScene(__instance.gameObject.scene.name)) return;
+                if (!__instance.gameObject.activeSelf) return;
+                if (!ShouldRemoveBunkerItem()) return;
+
+                __instance.gameObject.SetActive(false);
+                MelonLogger.Msg($"[Trespasser] Removed bunker item: {__instance.name}");
+            }
+        }
+
+
+        [HarmonyPatch(typeof(Container), nameof(Container.Start))]
+        internal static class Container_MaybeThinBunkerContents
+        {
+            internal static void Postfix(Container __instance)
+            {
+                if (!IsTrespasserMode()) return;
+                if (mIsSceneRestored) return;
+
+                string sceneName = __instance.gameObject.scene.name;
+                if (!IsBunkerScene(sceneName)) return;
+
+                Il2CppSystem.Collections.Generic.List<GameObject> gearList = __instance.m_GearToInstantiate;
+                if (gearList == null || gearList.Count == 0) return;
+
+                int removed = 0;
+                for (int i = gearList.Count - 1; i >= 0; i--)
+                {
+                    if (ShouldRemoveBunkerItem())
+                    {
+                        gearList.RemoveAt(i);
+                        removed++;
+                    }
+                }
+
+                if (removed > 0)
+                    MelonLogger.Msg($"[Trespasser] Thinned bunker container in {sceneName}: removed {removed} item(s), {gearList.Count} remaining");
+            }
         }
 
 

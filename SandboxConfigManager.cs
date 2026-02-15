@@ -6,12 +6,15 @@ using Il2CppTLD.Gear;
 using MelonLoader;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace Trespasser
 {
     internal class SandboxConfigManager
     {
         private static SandboxConfig mTrespasserConfig;
+
+        internal static HashSet<string> BunkerSceneNames { get; } = new(StringComparer.OrdinalIgnoreCase);
 
         public static SandboxConfig TrespasserConfig
         {
@@ -67,6 +70,23 @@ namespace Trespasser
         private static void ConfigureSandboxBunkerSetup(SandboxConfig trespasser, SandboxConfig stalker, SandboxConfig interloper)
         {
             trespasser.m_BunkerSetup = UnityEngine.Object.Instantiate(stalker.m_BunkerSetup);
+            CollectBunkerSceneNames(trespasser);
+        }
+
+        private static void CollectBunkerSceneNames(SandboxConfig trespasser)
+        {
+            BunkerSceneNames.Clear();
+            Il2CppTLD.Gameplay.BunkerInteriorSpecification[] interiors = trespasser.m_BunkerSetup.m_BunkerInteriors;
+            if (interiors == null) return;
+
+            foreach (Il2CppTLD.Gameplay.BunkerInteriorSpecification spec in interiors)
+            {
+                if (spec?.m_Interior == null) continue;
+                string sceneName = spec.m_Interior.name;
+                if (string.IsNullOrEmpty(sceneName)) continue;
+                BunkerSceneNames.Add(sceneName);
+                MelonLogger.Msg($"[Trespasser] Registered bunker scene: {sceneName}");
+            }
         }
 
         #endregion
