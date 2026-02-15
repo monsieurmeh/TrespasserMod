@@ -98,6 +98,7 @@ namespace Trespasser
         private static float[] mFlareScaleSignY;
 
         private static OrbitDirection mOrbitDirection = OrbitDirection.CounterClockwise;
+        private static bool mShowDesc = true;
 
         // Temporary diagnostics — scale sampler on original MovingBackground
         private static Transform mSourceBgTransform;
@@ -108,6 +109,7 @@ namespace Trespasser
             get => mOrbitDirection;
             set => mOrbitDirection = value;
         }
+        internal static bool IsInitialized => mCanvasObject != null;
         internal static bool IsSelectFading => mIsSelectFading;
         internal static bool IsDeselectFading => mIsDeselectFading;
 
@@ -137,9 +139,10 @@ namespace Trespasser
         }
 
 
-        internal static void FadeIn(float duration)
+        internal static void FadeIn(float duration, bool showDesc = true)
         {
             StopActiveCoroutine();
+            mShowDesc = showDesc;
             mIsSelectFading = true;
             mIsDeselectFading = false;
             mActiveCoroutine = MelonCoroutines.Start(FadeInCoroutine(duration,
@@ -591,7 +594,7 @@ namespace Trespasser
         }
 
 
-        private static Texture2D LoadEmbeddedTexture(string filename)
+        internal static Texture2D LoadEmbeddedTexture(string filename)
         {
             Assembly assembly = typeof(TrespasserOverlay).Assembly;
             string resourceName = assembly.GetManifestResourceNames()
@@ -826,13 +829,16 @@ namespace Trespasser
                 float wolfBotAlpha = DescElementAlpha(elapsed, WOLF_BOTTOM_DELAY, wolfBotFade);
                 mWolfBottomImage.color = new Color(1f, 1f, 1f, wolfBotAlpha);
 
-                float iconAlpha = DescElementAlpha(elapsed, ICON_DELAY, ICON_FADE);
-                float nameAlpha = DescElementAlpha(elapsed, NAME_DELAY, NAME_FADE);
-                float bulletsAlpha = DescElementAlpha(elapsed, BULLETS_DELAY, BULLETS_FADE);
+                if (mShowDesc)
+                {
+                    float iconAlpha = DescElementAlpha(elapsed, ICON_DELAY, ICON_FADE);
+                    float nameAlpha = DescElementAlpha(elapsed, NAME_DELAY, NAME_FADE);
+                    float bulletsAlpha = DescElementAlpha(elapsed, BULLETS_DELAY, BULLETS_FADE);
 
-                SetImageAlpha(mIconImage, ICON_COLOR, iconAlpha);
-                SetTextAlpha(mNameText, NAME_COLOR, nameAlpha);
-                SetTextAlpha(mBulletsText, BULLETS_COLOR, bulletsAlpha);
+                    SetImageAlpha(mIconImage, ICON_COLOR, iconAlpha);
+                    SetTextAlpha(mNameText, NAME_COLOR, nameAlpha);
+                    SetTextAlpha(mBulletsText, BULLETS_COLOR, bulletsAlpha);
+                }
 
                 yield return null;
             }
@@ -845,7 +851,7 @@ namespace Trespasser
             SetWolfOrbitalState(mWolfTopRect, WOLF_FINAL_POSITION, WOLF_FINAL_POSITION, mWolfTopSize);
             SetWolfOrbitalState(mWolfBottomRect, WOLF_FINAL_POSITION + 180f, WOLF_FINAL_POSITION + 180f, mWolfBotSize);
             mFlareMasterAlpha = 1f;
-            SetDescAlpha(1f);
+            SetDescAlpha(mShowDesc ? 1f : 0f);
             onComplete?.Invoke();
         }
 
@@ -864,7 +870,8 @@ namespace Trespasser
                 mBgImage.color = new Color(1f, 1f, 1f, Mathf.Lerp(BG_ALPHA_MAX, 0f, t));
                 mBgRect.localScale = Vector3.one * BG_SCALE_MAX;
                 mFlareMasterAlpha = fadeAlpha;
-                SetDescAlpha(fadeAlpha);
+                if (mShowDesc)
+                    SetDescAlpha(fadeAlpha);
 
                 yield return null;
             }

@@ -4,6 +4,7 @@ using Il2CppTLD.Gameplay;
 using Il2CppTLD.Gear;
 using MelonLoader;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 
 namespace Trespasser
 {
@@ -17,6 +18,10 @@ namespace Trespasser
         private static Panel_SelectExperience.XPModeMenuItem mInterloperMenuItem;
         private static bool mHasFadedOut;
         private static bool mIsSceneRestored;
+        private static Texture2D mCachedBwIcon;
+        private static Texture2D mCachedFullColor;
+        private static bool mSandboxWasTrespasser;
+        private static int mHiddenSandboxAnimIndex = -1;
 
 
         private static bool IsSameItem(Panel_SelectExperience.XPModeMenuItem a, Panel_SelectExperience.XPModeMenuItem b)
@@ -235,6 +240,153 @@ namespace Trespasser
         internal static bool IsTrespasserMode() =>  ExperienceModeManager.s_CurrentGameMode != null && ExperienceModeManager.s_CurrentGameMode.m_ModeName.m_LocalizationID.Contains("Trespasser");
 
 
+        private static bool IsTrespasserSave(SaveSlotInfo slotInfo)
+        {
+            if (slotInfo == null) return false;
+            GameModeConfig config = slotInfo.m_GameModeConfig;
+            if (config == null) return false;
+            return config.m_ModeName != null
+                && config.m_ModeName.m_LocalizationID != null
+                && config.m_ModeName.m_LocalizationID.Contains("Trespasser");
+        }
+
+
+        private static Texture2D GetCachedTexture(ref Texture2D cache, string filename)
+        {
+            if (cache == null)
+                cache = TrespasserOverlay.LoadEmbeddedTexture(filename);
+            return cache;
+        }
+
+
+        [HarmonyPatch(typeof(Panel_PauseMenu), nameof(Panel_PauseMenu.SetExperienceModeIcon))]
+        internal static class PanelPauseMenu_UseTrespasserIcon
+        {
+            private static GameObject mOverlayGo;
+            private static UITexture mOverlayTexture;
+
+            internal static void Postfix(Panel_PauseMenu __instance)
+            {
+                MelonLogger.Msg("[Trespasser] SetExperienceModeIcon postfix fired");
+
+                UISprite iconSprite = __instance.m_GameModeIcon;
+                if (iconSprite == null)
+                {
+                    MelonLogger.Msg("[Trespasser] m_GameModeIcon is null");
+                    return;
+                }
+
+                bool isTrespasser = IsTrespasserMode();
+                MelonLogger.Msg($"[Trespasser] IsTrespasserMode={isTrespasser}, sprite={iconSprite.spriteName}");
+
+                if (!isTrespasser)
+                {
+                    if (mOverlayGo != null)
+                        mOverlayGo.SetActive(false);
+                    iconSprite.enabled = true;
+                    return;
+                }
+
+                Texture2D tex = GetCachedTexture(ref mCachedBwIcon, "trespasser_bw_icon.png");
+                if (tex == null)
+                {
+                    MelonLogger.Msg("[Trespasser] Failed to load trespasser_bw_icon.png");
+                    return;
+                }
+
+                iconSprite.enabled = false;
+
+                if (mOverlayTexture == null || mOverlayGo == null)
+                {
+                    MelonLogger.Msg("[Trespasser] Creating pause icon overlay");
+                    mOverlayGo = new GameObject("TrespasserPauseIcon");
+                    mOverlayGo.transform.SetParent(iconSprite.transform.parent, false);
+                    mOverlayGo.transform.localPosition = iconSprite.transform.localPosition;
+                    mOverlayGo.transform.localScale = iconSprite.transform.localScale;
+                    mOverlayTexture = mOverlayGo.AddComponent<UITexture>();
+                    mOverlayTexture.depth = iconSprite.depth + 1;
+                }
+
+                mOverlayTexture.mainTexture = tex;
+                mOverlayTexture.width = iconSprite.width;
+                mOverlayTexture.height = iconSprite.height;
+                mOverlayGo.SetActive(true);
+                MelonLogger.Msg($"[Trespasser] Overlay active, size={iconSprite.width}x{iconSprite.height}");
+            }
+        }
+
+
+        [HarmonyPatch(typeof(Panel_ChooseSandbox), nameof(Panel_ChooseSandbox.RefreshDetails))]
+        internal static class PanelChooseSandbox_TrespasserOverlay
+        {
+            internal static void Postfix(Panel_ChooseSandbox __instance, SaveSlotInfo slotInfo)
+            {
+                bool isTrespasser = IsTrespasserSave(slotInfo);
+
+                if (isTrespasser && !mSandboxWasTrespasser)
+                {
+                    HideActiveSandboxAnim(__instance);
+                    if (TrespasserOverlay.IsInitialized)
+                        TrespasserOverlay.FadeIn(SELECT_DURATION, showDesc: false);
+                }
+                else if (!isTrespasser && mSandboxWasTrespasser)
+                {
+                    RestoreSandboxAnim(__instance);
+                    if (TrespasserOverlay.IsInitialized)
+                        TrespasserOverlay.FadeOut(DESELECT_DURATION);
+                }
+
+                mSandboxWasTrespasser = isTrespasser;
+            }
+        }
+
+
+        [HarmonyPatch(typeof(Panel_ChooseSandbox), nameof(Panel_ChooseSandbox.Enable))]
+        internal static class PanelChooseSandbox_OverlayLifecycle
+        {
+            internal static void Postfix(Panel_ChooseSandbox __instance, bool enable)
+            {
+                if (!enable)
+                {
+                    RestoreSandboxAnim(__instance);
+                    TrespasserOverlay.Hide();
+                    mSandboxWasTrespasser = false;
+                }
+            }
+        }
+
+
+        private static void HideActiveSandboxAnim(Panel_ChooseSandbox panel)
+        {
+            Il2CppSystem.Collections.Generic.List<Panel_ChooseSandbox.AnimMenuItems> items = panel.m_AnimMenuItems;
+            if (items == null) return;
+            for (int i = 0; i < items.Count; i++)
+            {
+                Panel_ChooseSandbox.AnimMenuItems item = items[i];
+                if (item?.m_Display != null && item.m_Display.activeSelf)
+                {
+                    item.m_Display.SetActive(false);
+                    mHiddenSandboxAnimIndex = i;
+                    return;
+                }
+            }
+        }
+
+
+        private static void RestoreSandboxAnim(Panel_ChooseSandbox panel)
+        {
+            if (mHiddenSandboxAnimIndex < 0) return;
+            Il2CppSystem.Collections.Generic.List<Panel_ChooseSandbox.AnimMenuItems> items = panel.m_AnimMenuItems;
+            if (items != null && mHiddenSandboxAnimIndex < items.Count)
+            {
+                Panel_ChooseSandbox.AnimMenuItems item = items[mHiddenSandboxAnimIndex];
+                if (item?.m_Display != null)
+                    item.m_Display.SetActive(true);
+            }
+            mHiddenSandboxAnimIndex = -1;
+        }
+
+
         private static int GetCurrentResourceIndex()
         {
             GameModeConfig current = ExperienceModeManager.s_CurrentGameMode;
@@ -242,6 +394,65 @@ namespace Trespasser
             ExperienceMode xp = current.m_XPMode;
             if (xp == null) return -1;
             return (int)xp.m_BaseResourceAvailability;
+        }
+
+
+        private static bool IsBunkerScene(string sceneName)
+            => !string.IsNullOrEmpty(sceneName) && SandboxConfigManager.BunkerSceneNames.Contains(sceneName);
+
+
+        private static bool ShouldRemoveBunkerItem()
+        {
+            double roll = new System.Random().NextDouble();
+            double removeChance = 1.0 - (Settings.Instance.InterloperBannedSpawnChance * 0.01);
+            return roll < removeChance;
+        }
+
+
+        [HarmonyPatch(typeof(GearItem), nameof(GearItem.ManualStart))]
+        internal static class GearItem_MaybeRemoveFromBunker
+        {
+            internal static void Postfix(GearItem __instance)
+            {
+                if (!IsTrespasserMode()) return;
+                if (mIsSceneRestored) return;
+                if (!IsBunkerScene(__instance.gameObject.scene.name)) return;
+                if (!__instance.gameObject.activeSelf) return;
+                if (!ShouldRemoveBunkerItem()) return;
+
+                __instance.gameObject.SetActive(false);
+                MelonLogger.Msg($"[Trespasser] Removed bunker item: {__instance.name}");
+            }
+        }
+
+
+        [HarmonyPatch(typeof(Container), nameof(Container.Start))]
+        internal static class Container_MaybeThinBunkerContents
+        {
+            internal static void Postfix(Container __instance)
+            {
+                if (!IsTrespasserMode()) return;
+                if (mIsSceneRestored) return;
+
+                string sceneName = __instance.gameObject.scene.name;
+                if (!IsBunkerScene(sceneName)) return;
+
+                Il2CppSystem.Collections.Generic.List<GameObject> gearList = __instance.m_GearToInstantiate;
+                if (gearList == null || gearList.Count == 0) return;
+
+                int removed = 0;
+                for (int i = gearList.Count - 1; i >= 0; i--)
+                {
+                    if (ShouldRemoveBunkerItem())
+                    {
+                        gearList.RemoveAt(i);
+                        removed++;
+                    }
+                }
+
+                if (removed > 0)
+                    MelonLogger.Msg($"[Trespasser] Thinned bunker container in {sceneName}: removed {removed} item(s), {gearList.Count} remaining");
+            }
         }
 
 
