@@ -19,15 +19,15 @@ namespace Trespasser
         private const float NAME_FADE = 0.17f;
         private const float BULLETS_DELAY = 0.57f;
         private const float BULLETS_FADE = 0.20f;
-        private const float WOLF_TOP_DELAY = 5.00f;
-        private const float WOLF_BOTTOM_DELAY = 10.00f;
-        private const float FLARE_DELAY = 3.00f;
+        private const float WOLF_TOP_DELAY = 3.00f;
+        private const float WOLF_BOTTOM_DELAY = 5.00f;
+        private const float FLARE_DELAY = 1.00f;
         private const float WOLF_SWEEP_DEGREES = 60f;
-        private const float WOLF_TOTAL_DURATION = 30f;
-        private const float WOLF_MOVE_DURATION = 30f;
-        private const float MACKENZIE_SCALE = 0.15f;
-        private const float WOLF_SCALE = 0.50f;
-        private const float WOLF_ORBIT_PX = 100f;
+        private const float WOLF_TOTAL_DURATION = 15f;
+        private const float WOLF_MOVE_DURATION = 15f;
+        private const float MACKENZIE_SCALE = 0.5f;
+        private const float WOLF_SCALE = 0.5f;
+        private const float WOLF_ORBIT_PX = 600f;
         private const float FLARE_PEAK_ALPHA = 0.4f;
         private const float FLARE_GROUP_A_RATIO = 0.705f;
         private const float FLARE_R_PEAK = 0.90f;
@@ -46,7 +46,7 @@ namespace Trespasser
         private static readonly Color BULLETS_COLOR = new(0.78f, 0.78f, 0.78f, 1f);
         private static readonly Color ICON_COLOR = new(0.98f, 0.98f, 0.98f, 1f);
         private static readonly Color FLARE_CORE_COLOR = new(0.98f, 0.98f, 0.98f, 1f);
-        private static readonly Vector2 FLARE_POSITION = new Vector2(50f, 50f);
+        private static readonly Vector2 FLARE_POSITION = new Vector2(75f, 95f);
 
         // Per-sprite pulse config: (period, pulseWidth, phaseOffset, peakRatio)
         // Indices 0-4 = Group A (BGtexture1-5), 5-8 = Group B (BGtexture6-9)
@@ -80,7 +80,6 @@ namespace Trespasser
         private static RectTransform mWolfTopRect;
         private static RawImage mWolfBottomImage;
         private static RectTransform mWolfBottomRect;
-        private static float mOrbitalRadius;
         private static Vector2 mFgCenter;
         private static Vector2 mWolfTopSize;
         private static Vector2 mWolfBotSize;
@@ -629,9 +628,6 @@ namespace Trespasser
                 (wolfBotTex.width * WOLF_SCALE) / Screen.width,
                 wolfBotPixelH / Screen.height);
 
-            float avgWolfPixelH = (wolfTopPixelH + wolfBotPixelH) / 2f;
-            mOrbitalRadius = WOLF_ORBIT_PX + avgWolfPixelH / 2f;
-
             mFgGroupObject = new GameObject("TrespasserFgGroup");
             mFgGroupObject.transform.SetParent(mCanvasObject.transform, false);
             RectTransform groupRect = mFgGroupObject.AddComponent<RectTransform>();
@@ -655,8 +651,6 @@ namespace Trespasser
 
             SetWolfOrbitalState(mWolfTopRect, -WOLF_SWEEP_DEGREES, 0f, mWolfTopSize);
             SetWolfOrbitalState(mWolfBottomRect, 180f - WOLF_SWEEP_DEGREES, 180f, mWolfBotSize);
-
-            
         }
 
 
@@ -675,8 +669,8 @@ namespace Trespasser
         private static void SetWolfOrbitalState(RectTransform rect, float angle, float homeAngle, Vector2 size)
         {
             float rad = angle * Mathf.Deg2Rad;
-            float x = mFgCenter.x + (mOrbitalRadius * Mathf.Sin(rad)) / Screen.width;
-            float y = mFgCenter.y + (mOrbitalRadius * Mathf.Cos(rad)) / Screen.height;
+            float x = mFgCenter.x + (WOLF_ORBIT_PX * Mathf.Sin(rad)) / Screen.width;
+            float y = mFgCenter.y + (WOLF_ORBIT_PX * Mathf.Cos(rad)) / Screen.height;
 
             rect.anchorMin = new Vector2(x - size.x / 2f, y - size.y / 2f);
             rect.anchorMax = new Vector2(x + size.x / 2f, y + size.y / 2f);
