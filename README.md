@@ -1,3 +1,4 @@
+![Trespasser Logo](https://raw.githubusercontent.com/monsieurmeh/TrespasserMod/main/Assets/trespasser_bw_icon.png)
 # Trespasser: A Stepping Stone from Stalker to Interloper #
 
 This mod adds a new distinct difficulty mode between Stalker and Interloper called Trespasser.
