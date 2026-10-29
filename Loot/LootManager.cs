@@ -9,16 +9,21 @@ namespace Trespasser
     {
         private TrespasserManager mManager;
         private bool mIsSceneRestored;
+        private HashSet<int> mBunkerDecidedItems = new();
 
         public LootManager(TrespasserManager manager)
         {
             mManager = manager;
         }
 
+        private double BannedItemChance => mManager.Settings.InterloperBannedSpawnChance * 0.01;
+        private double BunkerLootChance => mManager.Settings.PrepperCacheLootRate * 0.01;
+
 
         public void OnLoadSceneData(bool isSceneRestored)
         {
             mIsSceneRestored = isSceneRestored;
+            mBunkerDecidedItems.Clear();
         }
 
 
@@ -28,8 +33,13 @@ namespace Trespasser
             if (mIsSceneRestored) return false;
             if (!mManager.SandboxConfigManager.IsTrespasserMode()) return false;
             if (instance.GetComponent<GearItem>() == null) return false;
-            var roll = new System.Random().NextDouble();
-            return roll <= (mManager.Settings.InterloperBannedSpawnChance * 0.01f);
+
+            bool inBunker = IsBunkerScene(instance.gameObject.scene.name);
+            double chance = inBunker ? Math.Min(BannedItemChance, BunkerLootChance) : BannedItemChance;
+            bool shouldAllow = new System.Random().NextDouble() <= chance;
+            if (shouldAllow && inBunker)
+                mBunkerDecidedItems.Add(instance.gameObject.GetInstanceID());
+            return shouldAllow;
         }
 
 
@@ -39,6 +49,7 @@ namespace Trespasser
             if (mIsSceneRestored) return;
             if (!IsBunkerScene(gearItem.gameObject.scene.name)) return;
             if (!gearItem.gameObject.activeSelf) return;
+            if (mBunkerDecidedItems.Remove(gearItem.gameObject.GetInstanceID())) return;
             if (!ShouldRemoveBunkerItem()) return;
 
             gearItem.gameObject.SetActive(false);
@@ -112,7 +123,7 @@ namespace Trespasser
         private bool ShouldRemoveBunkerItem()
         {
             double roll = new System.Random().NextDouble();
-            double removeChance = 1.0 - (mManager.Settings.InterloperBannedSpawnChance * 0.01);
+            double removeChance = 1.0 - BunkerLootChance;
             return roll < removeChance;
         }
     }
