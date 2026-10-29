@@ -17,7 +17,6 @@ namespace Trespasser
         private static Panel_SelectExperience.XPModeMenuItem mTrespasserMenuItem;
         private static Panel_SelectExperience.XPModeMenuItem mInterloperMenuItem;
         private static bool mHasFadedOut;
-        private static bool mIsSceneRestored;
         private static Texture2D mCachedBwIcon;
         private static Texture2D mCachedFullColor;
         private static bool mSandboxWasTrespasser;
@@ -167,51 +166,6 @@ namespace Trespasser
             }
         }
 
-        [HarmonyPatch(typeof(DisableObjectForGameMode), nameof(DisableObjectForGameMode.ShouldDisableForCurrentMode))]
-        internal static class DisableObjectForGameMode_MaybeAllowForCurrentMode
-        {
-            internal static void Postfix(DisableObjectForGameMode __instance, ref bool __result)
-            {
-                if (!__result) return;
-                if (ShouldAllowBannedItem(__instance))
-                    __result = false;
-            }
-        }
-
-
-        [HarmonyPatch(typeof(DisableObjectForXPMode), nameof(DisableObjectForXPMode.ShouldDisableForCurrentMode))]
-        internal static class DisableObjectForXPMode_MaybeAllowForCurrentMode
-        {
-            internal static void Postfix(DisableObjectForXPMode __instance, ref bool __result)
-            {
-                if (!__result) return;
-                if (ShouldAllowBannedItem(__instance))
-                    __result = false;
-            }
-        }
-
-
-        [HarmonyPatch(typeof(SaveGameSystem), nameof(SaveGameSystem.LoadSceneData))]
-        internal static class SaveGameSystem_TrackFirstVisit
-        {
-            internal static void Postfix(bool __result) => mIsSceneRestored = __result;
-        }
-
-
-        private static bool ShouldAllowBannedItem(Component instance)
-        {
-            if (instance == null) return false;
-            if (mIsSceneRestored) return false;
-            if (!TrespasserManager.Instance.SandboxConfigManager.IsTrespasserMode()) return false;
-            if (instance.GetComponent<GearItem>() == null) return false;
-            var roll = new System.Random().NextDouble();
-            bool shouldAllow = roll <= (TrespasserManager.Instance.Settings.InterloperBannedSpawnChance * 0.01f);
-            if (shouldAllow && !string.IsNullOrEmpty(instance.gameObject.scene.name))
-                MelonLogger.Msg($"Allowing spawn of {instance.name} at {instance.gameObject.transform.position}");
-            return shouldAllow;
-        }
-
-
         private static Texture2D GetCachedTexture(ref Texture2D cache, string filename)
         {
             if (cache == null)
@@ -345,92 +299,6 @@ namespace Trespasser
                     item.m_Display.SetActive(true);
             }
             mHiddenSandboxAnimIndex = -1;
-        }
-
-
-        private static int GetCurrentResourceIndex()
-        {
-            GameModeConfig current = ExperienceModeManager.s_CurrentGameMode;
-            if (current == null) return -1;
-            ExperienceMode xp = current.m_XPMode;
-            if (xp == null) return -1;
-            return (int)xp.m_BaseResourceAvailability;
-        }
-
-
-        private static bool IsBunkerScene(string sceneName)
-            => !string.IsNullOrEmpty(sceneName) && TrespasserManager.Instance.SandboxConfigManager.BunkerSceneNames.Contains(sceneName);
-
-
-        private static bool ShouldRemoveBunkerItem()
-        {
-            double roll = new System.Random().NextDouble();
-            double removeChance = 1.0 - (TrespasserManager.Instance.Settings.InterloperBannedSpawnChance * 0.01);
-            return roll < removeChance;
-        }
-
-
-        [HarmonyPatch(typeof(GearItem), nameof(GearItem.ManualStart))]
-        internal static class GearItem_MaybeRemoveFromBunker
-        {
-            internal static void Postfix(GearItem __instance)
-            {
-                if (!TrespasserManager.Instance.SandboxConfigManager.IsTrespasserMode()) return;
-                if (mIsSceneRestored) return;
-                if (!IsBunkerScene(__instance.gameObject.scene.name)) return;
-                if (!__instance.gameObject.activeSelf) return;
-                if (!ShouldRemoveBunkerItem()) return;
-
-                __instance.gameObject.SetActive(false);
-                MelonLogger.Msg($"[Trespasser] Removed bunker item: {__instance.name}");
-            }
-        }
-
-
-        [HarmonyPatch(typeof(Container), nameof(Container.Start))]
-        internal static class Container_MaybeThinBunkerContents
-        {
-            internal static void Postfix(Container __instance)
-            {
-                if (!TrespasserManager.Instance.SandboxConfigManager.IsTrespasserMode()) return;
-                if (mIsSceneRestored) return;
-
-                string sceneName = __instance.gameObject.scene.name;
-                if (!IsBunkerScene(sceneName)) return;
-
-                Il2CppSystem.Collections.Generic.List<string> gearList = __instance.m_GearToInstantiate;
-                if (gearList == null || gearList.Count == 0) return;
-
-                int removed = 0;
-                for (int i = gearList.Count - 1; i >= 0; i--)
-                {
-                    if (ShouldRemoveBunkerItem())
-                    {
-                        gearList.RemoveAt(i);
-                        removed++;
-                    }
-                }
-
-                if (removed > 0)
-                    MelonLogger.Msg($"[Trespasser] Thinned bunker container in {sceneName}: removed {removed} item(s), {gearList.Count} remaining");
-            }
-        }
-
-
-        [HarmonyPatch(typeof(RandomSpawnObject), nameof(RandomSpawnObject.Start))]
-        internal static class RandomSpawnObject_FixInterloperQty
-        {
-            internal static void Prefix(RandomSpawnObject __instance)
-            {
-                if (!TrespasserManager.Instance.SandboxConfigManager.IsTrespasserMode()) return;
-
-                if (__instance.m_NumObjectsToEnableByLevel == null || __instance.m_NumObjectsToEnableByLevel.Length < 2) return;
-                int currentIndex = GetCurrentResourceIndex();
-                if (currentIndex < 0 || currentIndex >= __instance.m_NumObjectsToEnableByLevel.Length) return;
-                if (__instance.m_NumObjectsToEnableByLevel[currentIndex] != 0) return;
-                if (__instance.m_NumObjectsToEnableByLevel[currentIndex + 1] == 0) return;
-                __instance.m_NumObjectsToEnableByLevel[currentIndex] = Math.Max(1, (int)(__instance.m_NumObjectsToEnableByLevel[currentIndex + 1] * 0.5));
-            }
         }
     }
 }

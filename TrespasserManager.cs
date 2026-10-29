@@ -20,14 +20,17 @@ namespace Trespasser
 
         private Settings mSettings;
         private SandboxConfigManager mSandboxConfigManager;
+        private LootManager mLootManager;
 
         public Settings Settings { get { return mSettings; } }
         public SandboxConfigManager SandboxConfigManager { get { return mSandboxConfigManager; } }
+        public LootManager LootManager { get { return mLootManager; } }
 
         public void Initialize()
         {
             mSettings = new Settings();
             mSandboxConfigManager = new SandboxConfigManager();
+            mLootManager = new LootManager(this);
         }
     }
 }
