@@ -1,4 +1,5 @@
 using Il2Cpp;
+using Il2CppInterop.Runtime.InteropTypes.Arrays;
 using Il2CppTLD.Gameplay;
 using UnityEngine;
 
@@ -72,7 +73,25 @@ namespace Trespasser
             if (currentIndex < 0 || currentIndex >= spawner.m_NumObjectsToEnableByLevel.Length) return;
             if (spawner.m_NumObjectsToEnableByLevel[currentIndex] != 0) return;
             if (spawner.m_NumObjectsToEnableByLevel[currentIndex + 1] == 0) return;
+            if (!HasLootComponent(spawner)) return;
             spawner.m_NumObjectsToEnableByLevel[currentIndex] = Math.Max(1, (int)(spawner.m_NumObjectsToEnableByLevel[currentIndex + 1] * 0.5));
+        }
+
+
+        private bool HasLootComponent(RandomSpawnObject spawner)
+        {
+            Il2CppReferenceArray<GameObject> objectList = spawner.m_ObjectList;
+            if (objectList == null) return false;
+
+            for (int i = 0; i < objectList.Length; i++)
+            {
+                GameObject go = objectList[i];
+                if (go == null) continue;
+                if (go.GetComponentInChildren<GearItem>(true) != null) return true;
+                if (go.GetComponentInChildren<BodyHarvest>(true) != null) return true;
+            }
+
+            return false;
         }
 
 
