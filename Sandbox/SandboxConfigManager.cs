@@ -182,16 +182,7 @@ namespace Trespasser
 
         #region Start Gear
 
-        private void ConfigureSandboxStartGear(SandboxConfig trespasser, SandboxConfig stalker, SandboxConfig interloper)
-        {
-            trespasser.m_XPMode.m_StartGear = UnityEngine.Object.Instantiate(interloper.m_XPMode.m_StartGear);
-
-            var fixedGear = BuildTrespasserFixedGear(stalker);
-            if (fixedGear != null)
-                trespasser.m_XPMode.m_StartGear.m_FixedGear = fixedGear;
-        }
-
-        private static readonly (string prefab, int count)[] mGearDefinitions =
+        private static readonly (string prefab, int count)[] mStartGear =
         {
             ("GEAR_PackMatches",         3),
             ("GEAR_WaterSupplyPotable",  1),
@@ -201,140 +192,28 @@ namespace Trespasser
             ("GEAR_WoolSocks",           1),
             ("GEAR_BasicShoes",          1),
             ("GEAR_WorkPants",           1),
-            ("GEAR_LightShell",          1),
+            ("GEAR_SkiJacket",           1),
             ("GEAR_RecycledCan",         1),
         };
 
-        private Il2CppReferenceArray<FixedGearItem>? BuildTrespasserFixedGear(SandboxConfig stalker)
+        private void ConfigureSandboxStartGear(SandboxConfig trespasser, SandboxConfig stalker, SandboxConfig interloper)
         {
-            try
-            {
-                var stalkerGearLookup = BuildStalkerGearLookup(stalker);
-                if (stalkerGearLookup.Count == 0)
-                {
-                    return null;
-                }
-
-                var items = new List<FixedGearItem>();
-                foreach (var (prefab, count) in mGearDefinitions)
-                {
-                    var fixedItem = ResolveFixedGearItem(prefab, count, stalkerGearLookup);
-                    if (fixedItem != null)
-                    {
-                        items.Add(fixedItem);
-                    }
-                }
-
-                if (items.Count == 0)
-                {
-                    return null;
-                }
-
-                var result = new Il2CppReferenceArray<FixedGearItem>(items.Count);
-                for (int i = 0; i < items.Count; i++)
-                    result[i] = items[i];
-
-                return result;
-            }
-            catch (Exception ex)
-            {
-                return null;
-            }
+            trespasser.m_XPMode.m_StartGear = UnityEngine.Object.Instantiate(interloper.m_XPMode.m_StartGear);
+            trespasser.m_XPMode.m_StartGear.m_FixedGear = BuildStartGear();
+            trespasser.m_XPMode.m_StartGear.m_RandomGear = new Il2CppReferenceArray<RandomGearItem>(0);
         }
 
-        private Dictionary<string, AssetReferenceGearItem> BuildStalkerGearLookup(SandboxConfig stalker)
+        private Il2CppReferenceArray<FixedGearItem> BuildStartGear()
         {
-            var lookup = new Dictionary<string, AssetReferenceGearItem>(StringComparer.OrdinalIgnoreCase);
-
-            var stalkerStartGear = stalker.m_XPMode?.m_StartGear;
-            if (stalkerStartGear == null) return lookup;
-
-            var fixedGear = stalkerStartGear.m_FixedGear;
-            if (fixedGear == null) return lookup;
-
-            for (int i = 0; i < fixedGear.Length; i++)
+            List<FixedGearItem> items = new();
+            foreach ((string prefabName, int count) in mStartGear)
             {
-                var entry = fixedGear[i];
-                if (entry?.m_GearItem == null) continue;
-
-                var prefabName = TryResolvePrefabName(entry.m_GearItem);
-                if (string.IsNullOrEmpty(prefabName)) continue;
-
-                lookup.TryAdd(prefabName, entry.m_GearItem);
+                GameObject prefab = AssetHelper.SafeLoadAssetAsync<GameObject>(prefabName).WaitForCompletion();
+                GearItem? gearItem = prefab == null ? null : prefab.GetComponent<GearItem>();
+                if (gearItem == null || gearItem.m_GearItemData == null) continue;
+                items.Add(new FixedGearItem() { m_GearItem = gearItem.m_GearItemData.PrefabReference, m_Count = count });
             }
-
-            return lookup;
-        }
-
-        private string? TryResolvePrefabName(AssetReferenceGearItem assetRef)
-        {
-            try
-            {
-                if (!assetRef.RuntimeKeyIsValid()) return null;
-
-                var gameObj = assetRef.GetOrLoadAsset();
-                if (gameObj == null) return null;
-
-                return gameObj.name;
-            }
-            catch (Exception ex)
-            {
-                return null;
-            }
-        }
-
-
-        private FixedGearItem? ResolveFixedGearItem(string prefabName, int count, Dictionary<string, AssetReferenceGearItem> stalkerLookup)
-        {
-            if (stalkerLookup.TryGetValue(prefabName, out var stalkerRef))
-                return CreateFixedGearItem(stalkerRef, count);
-
-            return TryCreateFixedGearItemFromPrefab(prefabName, count);
-        }
-
-
-        private FixedGearItem? TryCreateFixedGearItemFromPrefab(string prefabName, int count)
-        {
-            try
-            {
-                var prefab = AssetHelper.SafeLoadAssetAsync<GameObject>(prefabName).WaitForCompletion();
-                if (prefab == null)
-                {
-                    return null;
-                }
-
-                var gearPrefab = prefab.GetComponent<GearItem>();
-                if (gearPrefab == null)
-                {
-                    return null;
-                }
-
-                var gearItemData = gearPrefab.m_GearItemData;
-                if (gearItemData == null)
-                {
-                    return null;
-                }
-
-                var prefabRef = gearItemData.PrefabReference;
-                if (prefabRef == null)
-                {
-                    return null;
-                }
-
-                return CreateFixedGearItem(prefabRef, count);
-            }
-            catch (Exception ex)
-            {
-                return null;
-            }
-        }
-
-        private FixedGearItem CreateFixedGearItem(AssetReferenceGearItem assetRef, int count)
-        {
-            var item = new FixedGearItem();
-            item.m_GearItem = assetRef;
-            item.m_Count = count;
-            return item;
+            return new Il2CppReferenceArray<FixedGearItem>(items.ToArray());
         }
 
         #endregion
