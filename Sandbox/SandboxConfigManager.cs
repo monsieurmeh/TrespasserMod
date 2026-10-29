@@ -14,11 +14,11 @@ namespace Trespasser
 {
     internal class SandboxConfigManager
     {
-        private static SandboxConfig mTrespasserConfig;
+        private SandboxConfig mTrespasserConfig;
 
-        internal static HashSet<string> BunkerSceneNames { get; } = new(StringComparer.OrdinalIgnoreCase);
+        internal HashSet<string> BunkerSceneNames { get; } = new(StringComparer.OrdinalIgnoreCase);
 
-        public static SandboxConfig TrespasserConfig
+        public SandboxConfig TrespasserConfig
         {
             get
             {
@@ -29,9 +29,40 @@ namespace Trespasser
             set => mTrespasserConfig = value;
         }
 
+        #region Game Mode
+
+        internal bool IsTrespasserMode() => ExperienceModeManager.s_CurrentGameMode != null && ExperienceModeManager.s_CurrentGameMode.m_ModeName.m_LocalizationID.Contains("Trespasser");
+
+        internal bool IsTrespasserSave(SaveSlotInfo slotInfo)
+        {
+            if (slotInfo == null) return false;
+            GameModeConfig config = slotInfo.m_GameModeConfig;
+            if (config == null) return false;
+            return config.m_ModeName != null
+                && config.m_ModeName.m_LocalizationID != null
+                && config.m_ModeName.m_LocalizationID.Contains("Trespasser");
+        }
+
+        internal void ProvideTrespasserGameMode(string gameModeName, ref GameModeConfig gameModeConfig)
+        {
+            if (gameModeName.Contains("Trespasser"))
+            {
+                gameModeConfig = TrespasserConfig;
+            }
+        }
+
+        internal bool ShouldSetGameModeConfig(GameModeConfig gameModeConfig)
+        {
+            return gameModeConfig != null
+                || ExperienceModeManager.s_CurrentGameMode == null
+                || !ExperienceModeManager.s_CurrentGameMode.m_ModeName.m_LocalizationID.Contains("Trespasser");
+        }
+
+        #endregion
+
         #region Top-Level Configuration
 
-        private static SandboxConfig InstantiateSandbox()
+        private SandboxConfig InstantiateSandbox()
         {
             var trespasser = new SandboxConfig();
             var stalker = ExperienceModeManager.GetGameModeFromName("Stalker").Cast<SandboxConfig>();
@@ -41,7 +72,7 @@ namespace Trespasser
             return trespasser;
         }
 
-        private static void ConfigureSandbox(SandboxConfig trespasser, SandboxConfig stalker, SandboxConfig interloper)
+        private void ConfigureSandbox(SandboxConfig trespasser, SandboxConfig stalker, SandboxConfig interloper)
         {
             ConfigureSandboxGeneral(trespasser, stalker, interloper);
             ConfigureSandboxBunkerSetup(trespasser, stalker, interloper);
@@ -54,7 +85,7 @@ namespace Trespasser
 
         #region General Settings
 
-        private static void ConfigureSandboxGeneral(SandboxConfig trespasser, SandboxConfig stalker, SandboxConfig interloper)
+        private void ConfigureSandboxGeneral(SandboxConfig trespasser, SandboxConfig stalker, SandboxConfig interloper)
         {
             trespasser.name = "Trespasser";
             trespasser.m_NumFeats = 2;
@@ -69,13 +100,13 @@ namespace Trespasser
 
         }
 
-        private static void ConfigureSandboxBunkerSetup(SandboxConfig trespasser, SandboxConfig stalker, SandboxConfig interloper)
+        private void ConfigureSandboxBunkerSetup(SandboxConfig trespasser, SandboxConfig stalker, SandboxConfig interloper)
         {
             trespasser.m_BunkerSetup = UnityEngine.Object.Instantiate(stalker.m_BunkerSetup);
             CollectBunkerSceneNames(trespasser);
         }
 
-        private static void CollectBunkerSceneNames(SandboxConfig trespasser)
+        private void CollectBunkerSceneNames(SandboxConfig trespasser)
         {
             BunkerSceneNames.Clear();
             Il2CppTLD.Gameplay.BunkerInteriorSpecification[] interiors = trespasser.m_BunkerSetup.m_BunkerInteriors;
@@ -95,7 +126,7 @@ namespace Trespasser
 
         #region XP Mode
 
-        private static void ConfigureSandboxXPMode(SandboxConfig trespasser, SandboxConfig stalker, SandboxConfig interloper)
+        private void ConfigureSandboxXPMode(SandboxConfig trespasser, SandboxConfig stalker, SandboxConfig interloper)
         {
             trespasser.m_XPMode = UnityEngine.Object.Instantiate(interloper.m_XPMode);
             trespasser.m_XPMode.m_ModeType = ExperienceModeType.Interloper;
@@ -105,7 +136,7 @@ namespace Trespasser
             ConfigureSandboxCougarSettings(trespasser, stalker, interloper);
         }
 
-        private static void ConfigureDifficultySettings(SandboxConfig trespasser)
+        private void ConfigureDifficultySettings(SandboxConfig trespasser)
         {
             var xp = trespasser.m_XPMode;
 
@@ -141,7 +172,7 @@ namespace Trespasser
             xp.m_DaysBeforeCabinFeverRiskOnset = 11;
         }
 
-        private static void ConfigureSandboxCougarSettings(SandboxConfig trespasser, SandboxConfig stalker, SandboxConfig interloper)
+        private void ConfigureSandboxCougarSettings(SandboxConfig trespasser, SandboxConfig stalker, SandboxConfig interloper)
         {
             trespasser.m_XPMode.m_CougarSettings = UnityEngine.Object.Instantiate(interloper.m_XPMode.m_CougarSettings);
             trespasser.m_XPMode.m_CougarSettings.m_ArrivalTimeMinimumDays = 14f;
@@ -153,7 +184,7 @@ namespace Trespasser
 
         #region Start Gear
 
-        private static void ConfigureSandboxStartGear(SandboxConfig trespasser, SandboxConfig stalker, SandboxConfig interloper)
+        private void ConfigureSandboxStartGear(SandboxConfig trespasser, SandboxConfig stalker, SandboxConfig interloper)
         {
             trespasser.m_XPMode.m_StartGear = UnityEngine.Object.Instantiate(interloper.m_XPMode.m_StartGear);
 
@@ -176,7 +207,7 @@ namespace Trespasser
             ("GEAR_RecycledCan",         1),
         };
 
-        private static Il2CppReferenceArray<FixedGearItem>? BuildTrespasserFixedGear(SandboxConfig stalker)
+        private Il2CppReferenceArray<FixedGearItem>? BuildTrespasserFixedGear(SandboxConfig stalker)
         {
             try
             {
@@ -213,7 +244,7 @@ namespace Trespasser
             }
         }
 
-        private static Dictionary<string, AssetReferenceGearItem> BuildStalkerGearLookup(SandboxConfig stalker)
+        private Dictionary<string, AssetReferenceGearItem> BuildStalkerGearLookup(SandboxConfig stalker)
         {
             var lookup = new Dictionary<string, AssetReferenceGearItem>(StringComparer.OrdinalIgnoreCase);
 
@@ -237,7 +268,7 @@ namespace Trespasser
             return lookup;
         }
 
-        private static string? TryResolvePrefabName(AssetReferenceGearItem assetRef)
+        private string? TryResolvePrefabName(AssetReferenceGearItem assetRef)
         {
             try
             {
@@ -255,7 +286,7 @@ namespace Trespasser
         }
 
 
-        private static FixedGearItem? ResolveFixedGearItem(string prefabName, int count, Dictionary<string, AssetReferenceGearItem> stalkerLookup)
+        private FixedGearItem? ResolveFixedGearItem(string prefabName, int count, Dictionary<string, AssetReferenceGearItem> stalkerLookup)
         {
             if (stalkerLookup.TryGetValue(prefabName, out var stalkerRef))
                 return CreateFixedGearItem(stalkerRef, count);
@@ -264,7 +295,7 @@ namespace Trespasser
         }
 
 
-        private static FixedGearItem? TryCreateFixedGearItemFromPrefab(string prefabName, int count)
+        private FixedGearItem? TryCreateFixedGearItemFromPrefab(string prefabName, int count)
         {
             try
             {
@@ -300,7 +331,7 @@ namespace Trespasser
             }
         }
 
-        private static FixedGearItem CreateFixedGearItem(AssetReferenceGearItem assetRef, int count)
+        private FixedGearItem CreateFixedGearItem(AssetReferenceGearItem assetRef, int count)
         {
             var item = new FixedGearItem();
             item.m_GearItem = assetRef;
@@ -312,7 +343,7 @@ namespace Trespasser
 
         #region Regions & Load Conditions
 
-        private static void ConfigureSandboxAvailableRegions(SandboxConfig trespasser, SandboxConfig stalker, SandboxConfig interloper)
+        private void ConfigureSandboxAvailableRegions(SandboxConfig trespasser, SandboxConfig stalker, SandboxConfig interloper)
         {
             trespasser.m_AvailableStartRegions = new Il2CppReferenceArray<Il2CppTLD.Scenes.RegionSpecification>(interloper.m_AvailableStartRegions.Length);
             for (int i = 0, iMax = interloper.m_AvailableStartRegions.Length; i < iMax; i++)
@@ -321,7 +352,7 @@ namespace Trespasser
             }
         }
 
-        private static void ConfigureSandboxSceneLoadConditions(SandboxConfig trespasser, SandboxConfig stalker, SandboxConfig interloper)
+        private void ConfigureSandboxSceneLoadConditions(SandboxConfig trespasser, SandboxConfig stalker, SandboxConfig interloper)
         {
             trespasser.m_LoadConditions = new Il2CppReferenceArray<Il2CppTLD.Scenes.SceneLoadCondition>(interloper.m_LoadConditions.Length);
             for (int i = 0, iMax = interloper.m_LoadConditions.Length; i < iMax; i++)

@@ -21,8 +21,8 @@ namespace Trespasser
 
         protected bool Initialize()
         {
-            Settings settings = new Settings();
-            return true;
+            TrespasserManager.Instance?.Initialize();
+            return TrespasserManager.Instance != null;
         }
 
 

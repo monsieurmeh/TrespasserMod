@@ -51,7 +51,7 @@ namespace Trespasser
         {
             public static void Prefix(ref Panel_SelectExperience __instance)
             {
-                SandboxConfig trespasserConfig = SandboxConfigManager.TrespasserConfig;
+                SandboxConfig trespasserConfig = TrespasserManager.Instance.SandboxConfigManager.TrespasserConfig;
                 Panel_SelectExperience.XPModeMenuItem interloperItem = __instance.m_MenuItems[3];
                 mInterloperMenuItem = interloperItem;
                 GameObject trespasserDisplay = UnityEngine.Object.Instantiate(interloperItem.m_Display);
@@ -167,31 +167,6 @@ namespace Trespasser
             }
         }
 
-        [HarmonyPatch(typeof(ExperienceModeManager), nameof(ExperienceModeManager.GetGameModeFromName))]
-        internal static class ExperienceModeManager_ProvideTrespasserGameModeOnGetGameModeFromName
-        {
-            internal static void Postfix(string gameModeName, ref GameModeConfig __result)
-            {
-                if (gameModeName.Contains("Trespasser"))
-                {
-                    __result = SandboxConfigManager.TrespasserConfig;
-                }
-            }
-        }
-
-
-        [HarmonyPatch(typeof(ExperienceModeManager), nameof(ExperienceModeManager.SetGameModeConfig))]
-        internal static class ExperienceModeManager_SetGameModeConfigDebug
-        {
-            internal static bool Prefix(GameModeConfig gameModeConfig, ExperienceModeManager __instance)
-            {
-                return gameModeConfig != null
-                    || ExperienceModeManager.s_CurrentGameMode == null
-                    || !ExperienceModeManager.s_CurrentGameMode.m_ModeName.m_LocalizationID.Contains("Trespasser");
-            }
-        }
-
-
         [HarmonyPatch(typeof(DisableObjectForGameMode), nameof(DisableObjectForGameMode.ShouldDisableForCurrentMode))]
         internal static class DisableObjectForGameMode_MaybeAllowForCurrentMode
         {
@@ -227,27 +202,13 @@ namespace Trespasser
         {
             if (instance == null) return false;
             if (mIsSceneRestored) return false;
-            if (!IsTrespasserMode()) return false;
+            if (!TrespasserManager.Instance.SandboxConfigManager.IsTrespasserMode()) return false;
             if (instance.GetComponent<GearItem>() == null) return false;
             var roll = new System.Random().NextDouble();
-            bool shouldAllow = roll <= (Settings.Instance.InterloperBannedSpawnChance * 0.01f);
+            bool shouldAllow = roll <= (TrespasserManager.Instance.Settings.InterloperBannedSpawnChance * 0.01f);
             if (shouldAllow && !string.IsNullOrEmpty(instance.gameObject.scene.name))
                 MelonLogger.Msg($"Allowing spawn of {instance.name} at {instance.gameObject.transform.position}");
             return shouldAllow;
-        }
-
-
-        internal static bool IsTrespasserMode() =>  ExperienceModeManager.s_CurrentGameMode != null && ExperienceModeManager.s_CurrentGameMode.m_ModeName.m_LocalizationID.Contains("Trespasser");
-
-
-        private static bool IsTrespasserSave(SaveSlotInfo slotInfo)
-        {
-            if (slotInfo == null) return false;
-            GameModeConfig config = slotInfo.m_GameModeConfig;
-            if (config == null) return false;
-            return config.m_ModeName != null
-                && config.m_ModeName.m_LocalizationID != null
-                && config.m_ModeName.m_LocalizationID.Contains("Trespasser");
         }
 
 
@@ -276,7 +237,7 @@ namespace Trespasser
                     return;
                 }
 
-                bool isTrespasser = IsTrespasserMode();
+                bool isTrespasser = TrespasserManager.Instance.SandboxConfigManager.IsTrespasserMode();
                 MelonLogger.Msg($"[Trespasser] IsTrespasserMode={isTrespasser}, sprite={iconSprite.spriteName}");
 
                 if (!isTrespasser)
@@ -321,7 +282,7 @@ namespace Trespasser
         {
             internal static void Postfix(Panel_ChooseSandbox __instance, SaveSlotInfo slotInfo)
             {
-                bool isTrespasser = IsTrespasserSave(slotInfo);
+                bool isTrespasser = TrespasserManager.Instance.SandboxConfigManager.IsTrespasserSave(slotInfo);
 
                 if (isTrespasser && !mSandboxWasTrespasser)
                 {
@@ -398,13 +359,13 @@ namespace Trespasser
 
 
         private static bool IsBunkerScene(string sceneName)
-            => !string.IsNullOrEmpty(sceneName) && SandboxConfigManager.BunkerSceneNames.Contains(sceneName);
+            => !string.IsNullOrEmpty(sceneName) && TrespasserManager.Instance.SandboxConfigManager.BunkerSceneNames.Contains(sceneName);
 
 
         private static bool ShouldRemoveBunkerItem()
         {
             double roll = new System.Random().NextDouble();
-            double removeChance = 1.0 - (Settings.Instance.InterloperBannedSpawnChance * 0.01);
+            double removeChance = 1.0 - (TrespasserManager.Instance.Settings.InterloperBannedSpawnChance * 0.01);
             return roll < removeChance;
         }
 
@@ -414,7 +375,7 @@ namespace Trespasser
         {
             internal static void Postfix(GearItem __instance)
             {
-                if (!IsTrespasserMode()) return;
+                if (!TrespasserManager.Instance.SandboxConfigManager.IsTrespasserMode()) return;
                 if (mIsSceneRestored) return;
                 if (!IsBunkerScene(__instance.gameObject.scene.name)) return;
                 if (!__instance.gameObject.activeSelf) return;
@@ -431,7 +392,7 @@ namespace Trespasser
         {
             internal static void Postfix(Container __instance)
             {
-                if (!IsTrespasserMode()) return;
+                if (!TrespasserManager.Instance.SandboxConfigManager.IsTrespasserMode()) return;
                 if (mIsSceneRestored) return;
 
                 string sceneName = __instance.gameObject.scene.name;
@@ -461,7 +422,7 @@ namespace Trespasser
         {
             internal static void Prefix(RandomSpawnObject __instance)
             {
-                if (!IsTrespasserMode()) return;
+                if (!TrespasserManager.Instance.SandboxConfigManager.IsTrespasserMode()) return;
 
                 if (__instance.m_NumObjectsToEnableByLevel == null || __instance.m_NumObjectsToEnableByLevel.Length < 2) return;
                 int currentIndex = GetCurrentResourceIndex();
