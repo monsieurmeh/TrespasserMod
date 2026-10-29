@@ -14,7 +14,7 @@ namespace Trespasser
         CounterClockwise
     }
 
-    internal static class TrespasserOverlay
+    internal class TrespasserOverlay
     {
         private const float BG_ALPHA_MAX = 0.4f;
         private const float BG_SCALE_MIN = 0.9f;
@@ -70,51 +70,51 @@ namespace Trespasser
             (5.50f, 3.00f, 5.400f, 1.000f),               // tex9
         };
 
-        private static GameObject mCanvasObject;
-        private static RawImage mBgImage;
-        private static RectTransform mBgRect;
-        private static RawImage mFgImage;
-        private static RectTransform mFgRect;
-        private static RawImage mIconImage;
-        private static TextMeshProUGUI mNameText;
-        private static TextMeshProUGUI mBulletsText;
-        private static object mActiveCoroutine;
-        private static bool mIsSelectFading;
-        private static bool mIsDeselectFading;
-        private static GameObject mFgGroupObject;
-        private static CanvasGroup mFgGroup;
-        private static RawImage mWolfTopImage;
-        private static RectTransform mWolfTopRect;
-        private static RawImage mWolfBottomImage;
-        private static RectTransform mWolfBottomRect;
-        private static Vector2 mFgCenter;
-        private static Vector2 mWolfTopSize;
-        private static Vector2 mWolfBotSize;
-        private static GameObject mMovingBgClone;
-        private static UISprite[] mMovingBgSprites;
-        private static object mFlareCoroutine;
-        private static float mFlareMasterAlpha;
-        private static UITexture mFlareCoreTexture;
-        private static float[] mFlareScaleSignY;
+        private GameObject mCanvasObject;
+        private RawImage mBgImage;
+        private RectTransform mBgRect;
+        private RawImage mFgImage;
+        private RectTransform mFgRect;
+        private RawImage mIconImage;
+        private TextMeshProUGUI mNameText;
+        private TextMeshProUGUI mBulletsText;
+        private object mActiveCoroutine;
+        private bool mIsSelectFading;
+        private bool mIsDeselectFading;
+        private GameObject mFgGroupObject;
+        private CanvasGroup mFgGroup;
+        private RawImage mWolfTopImage;
+        private RectTransform mWolfTopRect;
+        private RawImage mWolfBottomImage;
+        private RectTransform mWolfBottomRect;
+        private Vector2 mFgCenter;
+        private Vector2 mWolfTopSize;
+        private Vector2 mWolfBotSize;
+        private GameObject mMovingBgClone;
+        private UISprite[] mMovingBgSprites;
+        private object mFlareCoroutine;
+        private float mFlareMasterAlpha;
+        private UITexture mFlareCoreTexture;
+        private float[] mFlareScaleSignY;
 
-        private static OrbitDirection mOrbitDirection = OrbitDirection.CounterClockwise;
-        private static bool mShowDesc = true;
+        private OrbitDirection mOrbitDirection = OrbitDirection.CounterClockwise;
+        private bool mShowDesc = true;
 
         // Temporary diagnostics — scale sampler on original MovingBackground
-        private static Transform mSourceBgTransform;
-        private static Transform[] mSourceBgChildTransforms;
+        private Transform mSourceBgTransform;
+        private Transform[] mSourceBgChildTransforms;
 
-        internal static OrbitDirection WolfOrbitDirection
+        internal OrbitDirection WolfOrbitDirection
         {
             get => mOrbitDirection;
             set => mOrbitDirection = value;
         }
-        internal static bool IsInitialized => mCanvasObject != null;
-        internal static bool IsSelectFading => mIsSelectFading;
-        internal static bool IsDeselectFading => mIsDeselectFading;
+        internal bool IsInitialized => mCanvasObject != null;
+        internal bool IsSelectFading => mIsSelectFading;
+        internal bool IsDeselectFading => mIsDeselectFading;
 
 
-        internal static void Initialize(Panel_SelectExperience panel)
+        internal void Initialize(Panel_SelectExperience panel)
         {
             Destroy();
 
@@ -139,7 +139,7 @@ namespace Trespasser
         }
 
 
-        internal static void FadeIn(float duration, bool showDesc = true)
+        internal void FadeIn(float duration, bool showDesc = true)
         {
             StopActiveCoroutine();
             mShowDesc = showDesc;
@@ -150,7 +150,7 @@ namespace Trespasser
         }
 
 
-        internal static void FadeOut(float duration)
+        internal void FadeOut(float duration)
         {
             StopActiveCoroutine();
             mIsDeselectFading = true;
@@ -165,7 +165,7 @@ namespace Trespasser
         }
 
 
-        internal static void Hide()
+        internal void Hide()
         {
             StopActiveCoroutine();
             mIsSelectFading = false;
@@ -174,7 +174,7 @@ namespace Trespasser
         }
 
 
-        internal static void Destroy()
+        internal void Destroy()
         {
             StopActiveCoroutine();
             StopFlareAnimation();
@@ -213,7 +213,7 @@ namespace Trespasser
         }
 
 
-        private static void DisableAllNguiWidgets(GameObject display)
+        private void DisableAllNguiWidgets(GameObject display)
         {
             UIWidget[] widgets = display.GetComponentsInChildren<UIWidget>(true);
             foreach (UIWidget widget in widgets)
@@ -221,7 +221,7 @@ namespace Trespasser
         }
 
 
-        private static void GenerateFlareAnimation(GameObject trespasserDisplay)
+        private void GenerateFlareAnimation(GameObject trespasserDisplay)
         {
             Transform grandParent = trespasserDisplay.transform.parent.parent;
             if (grandParent == null)
@@ -276,7 +276,7 @@ namespace Trespasser
         }
 
 
-        private static void CreateFlareCore()
+        private void CreateFlareCore()
         {
             int size = (int)FLARE_CORE_SIZE;
             Texture2D tex = new(size, size, TextureFormat.RGBA32, false);
@@ -310,7 +310,7 @@ namespace Trespasser
         }
 
 
-        private static void StartFlareAnimation()
+        private void StartFlareAnimation()
         {
             StopFlareAnimation();
             if (mMovingBgSprites == null || mMovingBgSprites.Length == 0)
@@ -319,7 +319,7 @@ namespace Trespasser
         }
 
 
-        private static void StopFlareAnimation()
+        private void StopFlareAnimation()
         {
             if (mFlareCoroutine != null)
             {
@@ -329,7 +329,7 @@ namespace Trespasser
         }
 
 
-        private static IEnumerator FlareCoroutine()
+        private IEnumerator FlareCoroutine()
         {
             float elapsed = 0f;
             int spriteCount = Mathf.Min(mMovingBgSprites.Length, FLARE_PULSES.Length);
@@ -379,7 +379,7 @@ namespace Trespasser
         }
 
 
-        private static void CreateDescElements(GameObject interloperDisplay)
+        private void CreateDescElements(GameObject interloperDisplay)
         {
             Transform descTransform = interloperDisplay.transform.Find("Desc_Interloper");
             if (descTransform == null)
@@ -475,7 +475,7 @@ namespace Trespasser
         }
 
 
-        private static RawImage CreateSpriteIcon(UISprite srcSprite, Camera nguiCam, float pixelSize)
+        private RawImage CreateSpriteIcon(UISprite srcSprite, Camera nguiCam, float pixelSize)
         {
             Texture2D iconTex = LoadEmbeddedTexture("trespasser_bw_icon.png");
             if (iconTex == null)
@@ -503,7 +503,7 @@ namespace Trespasser
         }
 
 
-        private static TextMeshProUGUI CreateTextElement(string name, string content,
+        private TextMeshProUGUI CreateTextElement(string name, string content,
             TMP_FontAsset font, int fontSize, FontStyles fontStyle,
             Color color, TextAlignmentOptions alignment)
         {
@@ -524,7 +524,7 @@ namespace Trespasser
         }
 
 
-        private static void PositionFromNguiWidget(RectTransform rect, UIWidget srcWidget, Camera nguiCam, float pixelSize)
+        private void PositionFromNguiWidget(RectTransform rect, UIWidget srcWidget, Camera nguiCam, float pixelSize)
         {
             Vector3 worldCenter = srcWidget.transform.position;
             Vector3 viewportCenter = nguiCam.WorldToViewportPoint(worldCenter);
@@ -545,7 +545,7 @@ namespace Trespasser
             rect.offsetMax = Vector2.zero;
         }
 
-        private static T FindChildComponent<T>(Transform parent, string childName) where T : Component
+        private T FindChildComponent<T>(Transform parent, string childName) where T : Component
         {
             Transform child = parent.Find(childName);
             if (child == null)
@@ -554,7 +554,7 @@ namespace Trespasser
         }
 
 
-        private static UITexture FindNamedTexture(GameObject display, string childName)
+        private UITexture FindNamedTexture(GameObject display, string childName)
         {
             Transform child = display.transform.Find(childName);
             if (child == null)
@@ -563,7 +563,7 @@ namespace Trespasser
         }
 
 
-        private static void CreateCanvas()
+        private void CreateCanvas()
         {
             mCanvasObject = new GameObject("TrespasserOverlayCanvas");
             mCanvasObject.hideFlags = HideFlags.HideAndDontSave;
@@ -579,7 +579,7 @@ namespace Trespasser
         }
 
 
-        private static void CreateImage(UITexture sourceTexture, GameObject sourceDisplay,
+        private void CreateImage(UITexture sourceTexture, GameObject sourceDisplay,
             out RawImage image, out RectTransform rect, string name)
         {
             GameObject imageObject = new GameObject(name);
@@ -594,7 +594,7 @@ namespace Trespasser
         }
 
 
-        internal static Texture2D LoadEmbeddedTexture(string filename)
+        internal Texture2D LoadEmbeddedTexture(string filename)
         {
             Assembly assembly = typeof(TrespasserOverlay).Assembly;
             string resourceName = assembly.GetManifestResourceNames()
@@ -617,7 +617,7 @@ namespace Trespasser
         }
 
 
-        private static void CreateForegroundGroup(UITexture stalkerFgTexture, GameObject stalkerDisplay)
+        private void CreateForegroundGroup(UITexture stalkerFgTexture, GameObject stalkerDisplay)
         {
             Texture2D mackTex = LoadEmbeddedTexture("trespasser_mackenzie.png");
             Texture2D wolfTopTex = LoadEmbeddedTexture("trespasser_wolftop.png");
@@ -671,7 +671,7 @@ namespace Trespasser
         }
 
 
-        private static void CreateFgChild(string name, Texture2D texture,
+        private void CreateFgChild(string name, Texture2D texture,
             out RawImage image, out RectTransform rect)
         {
             GameObject obj = new(name);
@@ -683,14 +683,14 @@ namespace Trespasser
         }
 
 
-        private static float WolfStartAngle(float homeAngle)
+        private float WolfStartAngle(float homeAngle)
         {
             float sign = mOrbitDirection == OrbitDirection.Clockwise ? -1f : 1f;
             return homeAngle + sign * WOLF_SWEEP_DEGREES;
         }
 
 
-        private static void SetWolfOrbitalState(RectTransform rect, float angle, float homeAngle, Vector2 size)
+        private void SetWolfOrbitalState(RectTransform rect, float angle, float homeAngle, Vector2 size)
         {
             float rad = angle * Mathf.Deg2Rad;
             float x = mFgCenter.x + (WOLF_ORBIT_PX * Mathf.Sin(rad)) / Screen.width;
@@ -704,7 +704,7 @@ namespace Trespasser
         }
 
 
-        private static void PositionFromNgui(RectTransform rect, UITexture sourceTexture, GameObject sourceDisplay)
+        private void PositionFromNgui(RectTransform rect, UITexture sourceTexture, GameObject sourceDisplay)
         {
             Camera nguiCam = UICamera.mainCamera;
             if (nguiCam == null)
@@ -732,7 +732,7 @@ namespace Trespasser
         }
 
 
-        private static void ApplyHidden()
+        private void ApplyHidden()
         {
             if (mBgImage != null)
                 mBgImage.color = new Color(1f, 1f, 1f, 0f);
@@ -758,21 +758,21 @@ namespace Trespasser
         }
 
 
-        private static void SetImageAlpha(RawImage image, Color baseColor, float alpha)
+        private void SetImageAlpha(RawImage image, Color baseColor, float alpha)
         {
             if (image != null)
                 image.color = new Color(baseColor.r, baseColor.g, baseColor.b, alpha);
         }
 
 
-        private static void SetTextAlpha(TextMeshProUGUI text, Color baseColor, float alpha)
+        private void SetTextAlpha(TextMeshProUGUI text, Color baseColor, float alpha)
         {
             if (text != null)
                 text.color = new Color(baseColor.r, baseColor.g, baseColor.b, alpha);
         }
 
 
-        private static void SetDescAlpha(float alpha)
+        private void SetDescAlpha(float alpha)
         {
             SetImageAlpha(mIconImage, ICON_COLOR, alpha);
             SetTextAlpha(mNameText, NAME_COLOR, alpha);
@@ -780,7 +780,7 @@ namespace Trespasser
         }
 
 
-        private static float DescElementAlpha(float elapsed, float delay, float fadeDuration)
+        private float DescElementAlpha(float elapsed, float delay, float fadeDuration)
         {
             float raw = Mathf.Clamp01((elapsed - delay) / fadeDuration);
             return Mathf.SmoothStep(0f, 1f, raw);
@@ -789,7 +789,7 @@ namespace Trespasser
 
 
 
-        private static IEnumerator FadeInCoroutine(float duration, Action onComplete)
+        private IEnumerator FadeInCoroutine(float duration, Action onComplete)
         {
             mFgGroup.alpha = 1f;
             bool flareActivated = false;
@@ -856,7 +856,7 @@ namespace Trespasser
         }
 
 
-        private static IEnumerator FadeOutCoroutine(float duration, Action onComplete)
+        private IEnumerator FadeOutCoroutine(float duration, Action onComplete)
         {
             float elapsed = 0f;
 
@@ -888,7 +888,7 @@ namespace Trespasser
         }
 
 
-        private static void StopActiveCoroutine()
+        private void StopActiveCoroutine()
         {
             if (mActiveCoroutine != null)
             {
