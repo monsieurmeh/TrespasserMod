@@ -1,5 +1,6 @@
 ﻿using Il2Cpp;
 using Il2CppInterop.Runtime.InteropTypes.Arrays;
+using Il2CppTLD.AddressableAssets;
 using Il2CppTLD.AI;
 using Il2CppTLD.Gameplay;
 using Il2CppTLD.Gear;
@@ -7,6 +8,7 @@ using MelonLoader;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using UnityEngine;
 
 namespace Trespasser
 {
@@ -266,7 +268,13 @@ namespace Trespasser
         {
             try
             {
-                var gearPrefab = GearItem.LoadGearItemPrefab(prefabName);
+                var prefab = AssetHelper.SafeLoadAssetAsync<GameObject>(prefabName).WaitForCompletion();
+                if (prefab == null)
+                {
+                    return null;
+                }
+
+                var gearPrefab = prefab.GetComponent<GearItem>();
                 if (gearPrefab == null)
                 {
                     return null;

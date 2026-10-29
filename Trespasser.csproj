@@ -34,7 +34,7 @@
     <None Remove="DLLs\**" />
   </ItemGroup>
   <ItemGroup>
-    <PackageReference Include="STBlade.Modding.TLD.Il2CppAssemblies.Windows" Version="2.51.0" />
+    <PackageReference Include="MonsieurMeh.Modding.TLD.Il2CppAssemblies.Windows" Version="2.58.0" />
     <Reference Include="ModSettings">
       <HintPath>$(ModsPath)\ModSettings.dll</HintPath>
     </Reference>

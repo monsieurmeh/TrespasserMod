@@ -437,7 +437,7 @@ namespace Trespasser
                 string sceneName = __instance.gameObject.scene.name;
                 if (!IsBunkerScene(sceneName)) return;
 
-                Il2CppSystem.Collections.Generic.List<GameObject> gearList = __instance.m_GearToInstantiate;
+                Il2CppSystem.Collections.Generic.List<string> gearList = __instance.m_GearToInstantiate;
                 if (gearList == null || gearList.Count == 0) return;
 
                 int removed = 0;
