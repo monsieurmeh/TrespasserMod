@@ -1,6 +1,5 @@
 using Il2Cpp;
 using Il2CppTLD.Gameplay;
-using MelonLoader;
 using UnityEngine;
 
 namespace Trespasser
@@ -206,19 +205,11 @@ namespace Trespasser
 
         public void SetPauseMenuIcon(Panel_PauseMenu panel)
         {
-            MelonLogger.Msg("[Trespasser] SetExperienceModeIcon postfix fired");
-
             UISprite iconSprite = panel.m_GameModeIcon;
             if (iconSprite == null)
-            {
-                MelonLogger.Msg("[Trespasser] m_GameModeIcon is null");
                 return;
-            }
 
-            bool isTrespasser = mManager.SandboxConfigManager.IsTrespasserMode();
-            MelonLogger.Msg($"[Trespasser] IsTrespasserMode={isTrespasser}, sprite={iconSprite.spriteName}");
-
-            if (!isTrespasser)
+            if (!mManager.SandboxConfigManager.IsTrespasserMode())
             {
                 if (mPauseIconObject != null)
                     mPauseIconObject.SetActive(false);
@@ -228,16 +219,12 @@ namespace Trespasser
 
             Texture2D tex = GetCachedTexture(ref mCachedBwIcon, "trespasser_bw_icon.png");
             if (tex == null)
-            {
-                MelonLogger.Msg("[Trespasser] Failed to load trespasser_bw_icon.png");
                 return;
-            }
 
             iconSprite.enabled = false;
 
             if (mPauseIconTexture == null || mPauseIconObject == null)
             {
-                MelonLogger.Msg("[Trespasser] Creating pause icon overlay");
                 mPauseIconObject = new GameObject("TrespasserPauseIcon");
                 mPauseIconObject.transform.SetParent(iconSprite.transform.parent, false);
                 mPauseIconObject.transform.localPosition = iconSprite.transform.localPosition;
@@ -250,7 +237,6 @@ namespace Trespasser
             mPauseIconTexture.width = iconSprite.width;
             mPauseIconTexture.height = iconSprite.height;
             mPauseIconObject.SetActive(true);
-            MelonLogger.Msg($"[Trespasser] Overlay active, size={iconSprite.width}x{iconSprite.height}");
         }
 
 

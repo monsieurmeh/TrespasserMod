@@ -1,6 +1,5 @@
 using Il2Cpp;
 using Il2CppTLD.Gameplay;
-using MelonLoader;
 using UnityEngine;
 
 namespace Trespasser
@@ -29,10 +28,7 @@ namespace Trespasser
             if (!mManager.SandboxConfigManager.IsTrespasserMode()) return false;
             if (instance.GetComponent<GearItem>() == null) return false;
             var roll = new System.Random().NextDouble();
-            bool shouldAllow = roll <= (mManager.Settings.InterloperBannedSpawnChance * 0.01f);
-            if (shouldAllow && !string.IsNullOrEmpty(instance.gameObject.scene.name))
-                MelonLogger.Msg($"Allowing spawn of {instance.name} at {instance.gameObject.transform.position}");
-            return shouldAllow;
+            return roll <= (mManager.Settings.InterloperBannedSpawnChance * 0.01f);
         }
 
 
@@ -45,7 +41,6 @@ namespace Trespasser
             if (!ShouldRemoveBunkerItem()) return;
 
             gearItem.gameObject.SetActive(false);
-            MelonLogger.Msg($"[Trespasser] Removed bunker item: {gearItem.name}");
         }
 
 
@@ -60,18 +55,11 @@ namespace Trespasser
             Il2CppSystem.Collections.Generic.List<string> gearList = container.m_GearToInstantiate;
             if (gearList == null || gearList.Count == 0) return;
 
-            int removed = 0;
             for (int i = gearList.Count - 1; i >= 0; i--)
             {
                 if (ShouldRemoveBunkerItem())
-                {
                     gearList.RemoveAt(i);
-                    removed++;
-                }
             }
-
-            if (removed > 0)
-                MelonLogger.Msg($"[Trespasser] Thinned bunker container in {sceneName}: removed {removed} item(s), {gearList.Count} remaining");
         }
 
 

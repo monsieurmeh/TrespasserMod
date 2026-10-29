@@ -4,7 +4,6 @@ using Il2CppTLD.AddressableAssets;
 using Il2CppTLD.AI;
 using Il2CppTLD.Gameplay;
 using Il2CppTLD.Gear;
-using MelonLoader;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -118,7 +117,6 @@ namespace Trespasser
                 string sceneName = spec.m_Interior.name;
                 if (string.IsNullOrEmpty(sceneName)) continue;
                 BunkerSceneNames.Add(sceneName);
-                MelonLogger.Msg($"[Trespasser] Registered bunker scene: {sceneName}");
             }
         }
 

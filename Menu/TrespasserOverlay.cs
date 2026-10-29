@@ -100,10 +100,6 @@ namespace Trespasser
         private OrbitDirection mOrbitDirection = OrbitDirection.CounterClockwise;
         private bool mShowDesc = true;
 
-        // Temporary diagnostics — scale sampler on original MovingBackground
-        private Transform mSourceBgTransform;
-        private Transform[] mSourceBgChildTransforms;
-
         internal OrbitDirection WolfOrbitDirection
         {
             get => mOrbitDirection;
@@ -178,8 +174,6 @@ namespace Trespasser
         {
             StopActiveCoroutine();
             StopFlareAnimation();
-            mSourceBgTransform = null;
-            mSourceBgChildTransforms = null;
             mIsSelectFading = false;
             mIsDeselectFading = false;
 
@@ -240,13 +234,6 @@ namespace Trespasser
 
             if (source == null)
                 return;
-
-            // Capture original transform for scale sampling
-            mSourceBgTransform = source;
-            List<Transform> childTransforms = new();
-            for (int c = 0; c < source.childCount; c++)
-                childTransforms.Add(source.GetChild(c));
-            mSourceBgChildTransforms = childTransforms.ToArray();
 
             mMovingBgClone = UnityEngine.Object.Instantiate(source.gameObject, trespasserDisplay.transform);
             mMovingBgClone.transform.localPosition += new Vector3(FLARE_POSITION.x, FLARE_POSITION.y, 0);
