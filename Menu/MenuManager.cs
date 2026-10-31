@@ -12,6 +12,7 @@ namespace Trespasser
 
         private TrespasserManager mManager;
         private TrespasserOverlay mOverlay = new TrespasserOverlay();
+        private StatsColumn mStatsColumn;
         private Panel_SelectExperience.XPModeMenuItem mTrespasserMenuItem;
         private Panel_SelectExperience.XPModeMenuItem mInterloperMenuItem;
         private bool mHasFadedOut;
@@ -24,6 +25,7 @@ namespace Trespasser
         public MenuManager(TrespasserManager manager)
         {
             mManager = manager;
+            mStatsColumn = new StatsColumn(manager, mOverlay);
         }
 
         public bool IsSelectFading => mOverlay.IsSelectFading;
@@ -197,6 +199,13 @@ namespace Trespasser
             }
             mHiddenSandboxAnimIndex = -1;
         }
+
+        #endregion
+
+
+        #region Journal Stats
+
+        public void ApplyStatsColumn(DetailedStatsView view) => mStatsColumn.Apply(view);
 
         #endregion
 
