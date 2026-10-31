@@ -11,6 +11,7 @@ namespace Trespasser
         private const char Separator = ',';
         private const string LootToken = "BaseResourceAvailability";
         private const int VanillaLootLevelCount = 4;
+        private const int InterloperBaseCodeIndex = 3;
 
         private TrespasserManager mManager;
         private CustomLevels mLevels;
@@ -35,6 +36,36 @@ namespace Trespasser
             ConsoleComboBox lootCombo = panel.m_BaseDifficultyPopupList;
             if (lootCombo?.items != null && !lootCombo.items.Contains(CustomLevels.LevelLabel) && lootCombo.items.Count == VanillaLootLevelCount)
                 lootCombo.items.Add(CustomLevels.LevelLabel);
+            ConsoleComboBox presetCombo = panel.m_XPModePopupList;
+            if (presetCombo?.items != null && !presetCombo.items.Contains(CustomLevels.LevelLabel))
+                presetCombo.items.Add(CustomLevels.LevelLabel);
+        }
+
+
+        public bool ShouldSetValuesToMatchXPMode(Panel_CustomXPSetup panel)
+        {
+            if (panel.m_XPModePopupList?.value != CustomLevels.LevelLabel) return true;
+
+            CustomExperienceMode customMode = panel.m_CustomMode;
+            string[] baseCodes = panel.m_BaseXPModeCustomStrings;
+            if (customMode == null || baseCodes == null || baseCodes.Length <= InterloperBaseCodeIndex) return true;
+
+            CustomExperienceMode.CreateCustomModeFromString(customMode, baseCodes[InterloperBaseCodeIndex]);
+            mLevels.SetAllToTrespasser(customMode);
+            mLootActive = true;
+            customMode.UpdateBaseValues();
+            panel.SetUIFromCurrentCustomXP();
+            return false;
+        }
+
+
+        public void ShowPresetWhenMatching(Panel_CustomXPSetup panel)
+        {
+            CustomExperienceMode customMode = panel.m_CustomMode;
+            ConsoleComboBox presetCombo = panel.m_XPModePopupList;
+            if (customMode == null || presetCombo?.items == null || !presetCombo.items.Contains(CustomLevels.LevelLabel)) return;
+            if (mLootActive && mLevels.TrespasserTunables(customMode).Count == mLevels.Count)
+                presetCombo.value = CustomLevels.LevelLabel;
         }
 
 

@@ -123,6 +123,13 @@ namespace Trespasser
             => mSettings.Where(setting => IsTrespasserLevel(customMode, setting)).Select(setting => setting.TunableProperty).ToList();
 
 
+        public void SetAllToTrespasser(CustomExperienceMode customMode)
+        {
+            foreach (LevelSetting setting in mSettings)
+                SetLevel(customMode, setting, TrespasserLevelOf(setting));
+        }
+
+
         public void SetToTrespasser(CustomExperienceMode customMode, ICollection<string> tunableProperties)
         {
             foreach (LevelSetting setting in mSettings.Where(setting => tunableProperties.Contains(setting.TunableProperty)))
