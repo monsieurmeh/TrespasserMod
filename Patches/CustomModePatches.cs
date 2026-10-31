@@ -47,6 +47,22 @@ namespace Trespasser
         }
 
 
+        [HarmonyPatch(typeof(Panel_CustomXPSetup), nameof(Panel_CustomXPSetup.SetCustomXPSettingsFromUI))]
+        internal static class PanelCustomXPSetup_ReadTrespasserLoot
+        {
+            internal static void Prefix(Panel_CustomXPSetup __instance) => TrespasserManager.Instance.CustomModeManager.BeginReadLootFromUI(__instance);
+
+            internal static void Postfix(Panel_CustomXPSetup __instance) => TrespasserManager.Instance.CustomModeManager.EndReadLootFromUI(__instance);
+        }
+
+
+        [HarmonyPatch(typeof(Panel_CustomXPSetup), nameof(Panel_CustomXPSetup.SetUIFromCurrentCustomXP))]
+        internal static class PanelCustomXPSetup_ShowTrespasserLoot
+        {
+            internal static void Postfix(Panel_CustomXPSetup __instance) => TrespasserManager.Instance.CustomModeManager.ShowLootInUI(__instance);
+        }
+
+
         [HarmonyPatch(typeof(Panel_CustomXPSetup), nameof(Panel_CustomXPSetup.OnContinue))]
         internal static class PanelCustomXPSetup_HandLevelsToNewGame
         {
@@ -57,7 +73,7 @@ namespace Trespasser
 
 
         [HarmonyPatch(typeof(Panel_CustomXPSetup), nameof(Panel_CustomXPSetup.OnEnterCodePopupConfirmed))]
-        internal static class PanelCustomXPSetup_CodeClearsHandoff
+        internal static class PanelCustomXPSetup_CodeClearsTrespasserLevels
         {
             internal static void Prefix() => TrespasserManager.Instance.CustomModeManager.OnCodeEntered();
         }

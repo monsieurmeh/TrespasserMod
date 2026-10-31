@@ -51,8 +51,9 @@ namespace Trespasser
         public bool ShouldAllowBannedItem(Component instance)
         {
             if (instance == null) return false;
-            if (!mManager.SandboxConfigManager.IsTrespasserMode()) return false;
+            if (!IsTrespasserLootActive()) return false;
             if (!mInterloperBans.IsInterloperBan(instance)) return false;
+            if (IsSwitchedOffInCustomGame(instance)) return false;
             if (mBansLifted > 0 || mBanExemptions.IsExempt(instance.gameObject.name)) return true;
 
             GearItem gearItem = instance.GetComponent<GearItem>();
@@ -108,7 +109,7 @@ namespace Trespasser
 
         public void RollRandomContainerGear(Container container, int firstNewIndex)
         {
-            if (!mManager.SandboxConfigManager.IsTrespasserMode()) return;
+            if (!IsTrespasserLootActive()) return;
 
             Il2CppSystem.Collections.Generic.List<string> gearList = container.m_GearToInstantiate;
             if (gearList == null) return;
@@ -127,7 +128,7 @@ namespace Trespasser
 
         public void RollRadialDraw(RadialObjectSpawner spawner, ref GameObject prefab)
         {
-            if (!mManager.SandboxConfigManager.IsTrespasserMode()) return;
+            if (!IsTrespasserLootActive()) return;
 
             LootSource source = IsBeachcombing(spawner) ? LootSource.Beachcombing : LootSource.World;
             GameObject banned = mBannedLootTables.MaybeDrawBanned(spawner.ActiveLootTableData, source, spawner.gameObject.scene.name);
@@ -139,7 +140,7 @@ namespace Trespasser
         public void KeepRolledRadialSpawn(RadialObjectSpawner spawner, GameObject prefab, GameObject spawned)
         {
             if (spawned == null || spawner.ActiveLootTableData == null) return;
-            if (!mManager.SandboxConfigManager.IsTrespasserMode()) return;
+            if (!IsTrespasserLootActive()) return;
             if (!DisableForCurrentModeExtensions.ShouldDisableForCurrentMode(prefab)) return;
 
             foreach (DisableObjectForXPMode disabler in spawned.GetComponents<DisableObjectForXPMode>())
@@ -151,7 +152,7 @@ namespace Trespasser
 
         public void RollTrade(TradeExchange exchange, TraderState traderState, ref TradeExchangeData draw)
         {
-            if (!mManager.SandboxConfigManager.IsTrespasserMode()) return;
+            if (!IsTrespasserLootActive()) return;
             draw = mBannedTrades.MaybeDrawBanned(exchange, traderState, draw);
         }
 
@@ -161,7 +162,7 @@ namespace Trespasser
 
         public void MaybeRemoveFromBunker(GearItem gearItem)
         {
-            if (!mManager.SandboxConfigManager.IsTrespasserMode()) return;
+            if (!IsTrespasserLootActive()) return;
             if (mIsSceneRestored) return;
             if (!IsBunkerScene(gearItem.gameObject.scene.name)) return;
             if (!gearItem.gameObject.activeSelf) return;
@@ -175,7 +176,7 @@ namespace Trespasser
 
         public void MaybeThinBunkerContents(Container container)
         {
-            if (!mManager.SandboxConfigManager.IsTrespasserMode()) return;
+            if (!IsTrespasserLootActive()) return;
 
             string sceneName = container.gameObject.scene.name;
             if (!IsBunkerScene(sceneName)) return;
@@ -194,7 +195,7 @@ namespace Trespasser
 
         public void FixInterloperQuantity(RandomSpawnObject spawner)
         {
-            if (!mManager.SandboxConfigManager.IsTrespasserMode()) return;
+            if (!IsTrespasserLootActive()) return;
 
             if (spawner.m_NumObjectsToEnableByLevel == null || spawner.m_NumObjectsToEnableByLevel.Length < 2) return;
             int currentIndex = GetCurrentResourceIndex();
@@ -222,6 +223,22 @@ namespace Trespasser
 
 
         public bool Roll(double chance) => new System.Random().NextDouble() < chance;
+
+
+        private bool IsTrespasserLootActive()
+            => mManager.SandboxConfigManager.IsTrespasserMode() || mManager.CustomModeManager.IsTrespasserLootActive();
+
+
+        private bool IsSwitchedOffInCustomGame(Component instance)
+        {
+            ExperienceModeManager manager = GameManager.GetExperienceModeManagerComponent();
+            if (manager == null || !manager.InCustomMode()) return false;
+            CustomExperienceMode customMode = manager.GetCustomMode();
+            GearItem gearItem = instance.GetComponent<GearItem>();
+            if (customMode == null || gearItem == null) return false;
+            if (!customMode.m_RiflesInWorld && gearItem.IsGunOrAmmoOrCasingOfType(GunType.Rifle)) return true;
+            return !customMode.m_RevolversInWorld && gearItem.IsGunOrAmmoOrCasingOfType(GunType.Revolver);
+        }
 
 
         private bool RollPrefab(GameObject prefab)
