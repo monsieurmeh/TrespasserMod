@@ -1,5 +1,6 @@
 using HarmonyLib;
 using Il2Cpp;
+using Il2CppTLD.AI;
 using Il2CppTLD.Gameplay;
 
 namespace Trespasser
@@ -12,6 +13,15 @@ namespace Trespasser
             internal static void Prefix(CustomExperienceMode __instance) => TrespasserManager.Instance.CustomModeManager.SuspendLevels(__instance);
 
             internal static void Postfix(CustomExperienceMode __instance) => TrespasserManager.Instance.CustomModeManager.OnUpdatedBaseValues(__instance);
+        }
+
+
+        [HarmonyPatch(typeof(CustomExperienceMode), nameof(CustomExperienceMode.GetCougarSettings))]
+        internal static class CustomExperienceMode_TrespasserCougar
+        {
+            internal static void Prefix(CustomExperienceMode __instance) => TrespasserManager.Instance.CustomModeManager.SuspendLevels(__instance);
+
+            internal static void Postfix(CustomExperienceMode __instance, ref CougarSettings __result) => TrespasserManager.Instance.CustomModeManager.OnGetCougarSettings(__instance, ref __result);
         }
 
 

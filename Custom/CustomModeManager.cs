@@ -1,4 +1,5 @@
 using Il2Cpp;
+using Il2CppTLD.AI;
 using Il2CppTLD.Gameplay;
 using ModData;
 
@@ -77,6 +78,15 @@ namespace Trespasser
         {
             mLevels.Restore(customMode);
             mLevels.ApplyTrespasserValues(customMode);
+        }
+
+
+        public void OnGetCougarSettings(CustomExperienceMode customMode, ref CougarSettings cougarSettings)
+        {
+            mLevels.Restore(customMode);
+            CougarSettings? trespasserCougar = mLevels.TrespasserCougarSettings(customMode);
+            if (trespasserCougar != null)
+                cougarSettings = trespasserCougar;
         }
 
 

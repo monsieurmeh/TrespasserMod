@@ -1,5 +1,6 @@
 using System.Reflection;
 using Il2Cpp;
+using Il2CppTLD.AI;
 using Il2CppTLD.Gameplay;
 
 namespace Trespasser
@@ -7,6 +8,7 @@ namespace Trespasser
     internal class CustomLevels
     {
         public const string LevelLabel = "Trespasser";
+        private const string CougarTunableProperty = "m_CougarDifficulty";
 
         private class LevelSetting
         {
@@ -46,6 +48,8 @@ namespace Trespasser
             new("m_FrosbiteRisk", new[] { "m_FrostbiteDamageMultiplier" }, "m_FrostbiteRiskPopupList", 3),
             new("m_BlizzardFrequency", new[] { "m_ChanceOfBlizzardScale" }, "m_BlizzardFreqPopupList", 3),
             new("m_WolfSpawnDistance", new[] { "m_ClosestSpawnDistanceAfterTransitionScale" }, "m_WolfSpawnDistancePopupList", 0),
+            new("m_StartingGear", new[] { "m_StartGear" }, "m_StartingGearPopupList", 1),
+            new(CougarTunableProperty, Array.Empty<string>(), "m_CougarDifficultyPopupList", 2),
         };
 
         private TrespasserManager mManager;
@@ -104,6 +108,14 @@ namespace Trespasser
                     property.SetValue(customMode, property.GetValue(trespasserMode));
                 }
             }
+        }
+
+
+        public CougarSettings? TrespasserCougarSettings(CustomExperienceMode customMode)
+        {
+            LevelSetting cougar = mSettings.First(setting => setting.TunableProperty == CougarTunableProperty);
+            if (customMode == null || !IsTrespasserLevel(customMode, cougar)) return null;
+            return mManager.SandboxConfigManager.TrespasserConfig.m_XPMode.GetCougarSettings(false);
         }
 
 
