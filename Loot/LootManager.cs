@@ -21,6 +21,7 @@ namespace Trespasser
         private BannedLootTables mBannedLootTables;
         private BannedTrades mBannedTrades;
         private BanExemptions mBanExemptions;
+        private InterloperBans mInterloperBans = new();
         private bool mIsSceneRestored;
         private HashSet<int> mBunkerDecidedItems = new();
         private List<string> mRolledContainerPrefabs = new();
@@ -51,6 +52,7 @@ namespace Trespasser
         {
             if (instance == null) return false;
             if (!mManager.SandboxConfigManager.IsTrespasserMode()) return false;
+            if (!mInterloperBans.IsInterloperBan(instance)) return false;
             if (mBansLifted > 0 || mBanExemptions.IsExempt(instance.gameObject.name)) return true;
 
             GearItem gearItem = instance.GetComponent<GearItem>();

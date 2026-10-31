@@ -3,7 +3,7 @@ using System.Reflection;
 
 [assembly: AssemblyTitle("Trespasser")]
 [assembly: AssemblyCopyright("MonsiuerMeh")]
-[assembly: AssemblyVersion("1.0.8")]
-[assembly: AssemblyFileVersion("1.0.8")]
-[assembly: MelonInfo(typeof(Trespasser.Main), "Trespasser", "1.0.8", "MonsieurMeh, Atmudia, Flower Field", null)]
+[assembly: AssemblyVersion("1.0.9")]
+[assembly: AssemblyFileVersion("1.0.9")]
+[assembly: MelonInfo(typeof(Trespasser.Main), "Trespasser", "1.0.9", "MonsieurMeh, Atmudia, Flower Field", null)]
 [assembly: MelonGame("Hinterland", "TheLongDark")]
