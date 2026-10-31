@@ -20,6 +20,7 @@ namespace Trespasser
         private TrespasserManager mManager;
         private BannedLootTables mBannedLootTables;
         private BannedTrades mBannedTrades;
+        private BanExemptions mBanExemptions;
         private bool mIsSceneRestored;
         private HashSet<int> mBunkerDecidedItems = new();
         private List<string> mRolledContainerPrefabs = new();
@@ -32,6 +33,7 @@ namespace Trespasser
             mManager = manager;
             mBannedLootTables = new BannedLootTables(this);
             mBannedTrades = new BannedTrades(this);
+            mBanExemptions = new BanExemptions(manager);
         }
 
         private double BunkerLootChance => mManager.Settings.PrepperCacheLootRate * 0.01;
@@ -49,7 +51,7 @@ namespace Trespasser
         {
             if (instance == null) return false;
             if (!mManager.SandboxConfigManager.IsTrespasserMode()) return false;
-            if (mBansLifted > 0) return true;
+            if (mBansLifted > 0 || mBanExemptions.IsExempt(instance.gameObject.name)) return true;
 
             GearItem gearItem = instance.GetComponent<GearItem>();
             if (gearItem == null) return false;
@@ -162,6 +164,7 @@ namespace Trespasser
             if (!IsBunkerScene(gearItem.gameObject.scene.name)) return;
             if (!gearItem.gameObject.activeSelf) return;
             if (mBunkerDecidedItems.Remove(gearItem.gameObject.GetInstanceID())) return;
+            if (mBanExemptions.IsExempt(gearItem.gameObject.name)) return;
             if (!ShouldRemoveBunkerItem()) return;
 
             gearItem.gameObject.SetActive(false);
@@ -180,7 +183,7 @@ namespace Trespasser
 
             for (int i = gearList.Count - 1; i >= 0; i--)
             {
-                if (mRolledContainerPrefabs.Remove(gearList[i])) continue;
+                if (mRolledContainerPrefabs.Remove(gearList[i]) || mBanExemptions.IsExempt(gearList[i])) continue;
                 if (ShouldRemoveBunkerItem())
                     gearList.RemoveAt(i);
             }

@@ -27,6 +27,10 @@ namespace Trespasser
         [Description("Chance for each trade the trader rolls that would have offered or asked for an interloper-banned item on Stalker to keep it. Otherwise the trader rolls what Interloper would. Default: 10%")]
         public int TraderBannedChance = 10;
 
+        [Name("Ensure Collectables Always Spawn")]
+        [Description("Collectable rifle, revolver and bow variants (Barbs, Curator's, Vaughn's, Trader's rifles; the fancy, green and stub-nosed revolvers; the Bushcraft, Manufactured and Woodwright's bows) are never banned and always spawn where Stalker would put them. The base rifle, revolver and bow stay banned. The list is Mods/Trespasser/BanExemptions.json. Default: on")]
+        public bool EnsureCollectablesSpawn = true;
+
         [Section("Loot thinning")]
         [Name("Prepper Cache Loot Rate")]
         [Slider(0, 100)]
