@@ -38,6 +38,9 @@
     <Reference Include="ModSettings">
       <HintPath>$(ModsPath)\ModSettings.dll</HintPath>
     </Reference>
+    <Reference Include="ModData">
+      <HintPath>$(ModsPath)\ModData.dll</HintPath>
+    </Reference>
   </ItemGroup>
 
   <Target Name="PostBuild" AfterTargets="PostBuildEvent">

@@ -22,11 +22,13 @@ namespace Trespasser
         private SandboxConfigManager mSandboxConfigManager;
         private MenuManager mMenuManager;
         private LootManager mLootManager;
+        private CustomModeManager mCustomModeManager;
 
         public Settings Settings { get { return mSettings; } }
         public SandboxConfigManager SandboxConfigManager { get { return mSandboxConfigManager; } }
         public MenuManager MenuManager { get { return mMenuManager; } }
         public LootManager LootManager { get { return mLootManager; } }
+        public CustomModeManager CustomModeManager { get { return mCustomModeManager; } }
 
         public void Initialize()
         {
@@ -34,6 +36,7 @@ namespace Trespasser
             mSandboxConfigManager = new SandboxConfigManager();
             mMenuManager = new MenuManager(this);
             mLootManager = new LootManager(this);
+            mCustomModeManager = new CustomModeManager(this);
         }
     }
 }
