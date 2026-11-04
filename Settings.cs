@@ -28,7 +28,7 @@ namespace Trespasser
         public int TraderBannedChance = 10;
 
         [Name("Ensure Collectables Always Spawn")]
-        [Description("Collectable rifle, revolver and bow variants (Barbs, Curator's, Vaughn's, Trader's rifles; the fancy, green and stub-nosed revolvers; the Bushcraft, Manufactured and Woodwright's bows) are never banned and always spawn where Stalker would put them. The base rifle, revolver and bow stay banned. The list is Mods/Trespasser/BanExemptions.json. Default: on")]
+        [Description("Collectable rifles, revolvers and bows spawn as on Stalker. List: Mods/Trespasser/BanExemptions.json. Default: on")]
         public bool EnsureCollectablesSpawn = true;
 
         [Section("Loot thinning")]
