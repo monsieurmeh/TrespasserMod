@@ -1,3 +1,4 @@
+using System.Reflection;
 using System.Text.Json;
 using MelonLoader;
 
@@ -6,13 +7,6 @@ namespace Trespasser
     internal class BanExemptions
     {
         private const string FileName = "BanExemptions.json";
-
-        private static readonly string[] mDefaultItems =
-        {
-            "GEAR_Rifle_Barbs", "GEAR_Rifle_Curators", "GEAR_Rifle_Trader", "GEAR_Rifle_Vaughns",
-            "GEAR_RevolverFancy", "GEAR_RevolverGreen", "GEAR_RevolverStubNosed",
-            "GEAR_Bow_Bushcraft", "GEAR_Bow_Manufactured", "GEAR_Bow_Woodwrights",
-        };
 
         private class StoredExemptions
         {
@@ -43,23 +37,36 @@ namespace Trespasser
             string? json = TrespasserDataFolder.ReadText(FileName);
             if (json == null)
             {
-                items.UnionWith(mDefaultItems);
-                StoredExemptions defaults = new() { Items = new List<string>(mDefaultItems) };
-                TrespasserDataFolder.WriteText(FileName, JsonSerializer.Serialize(defaults, new JsonSerializerOptions { WriteIndented = true }));
-                return items;
+                json = DefaultJson();
+                TrespasserDataFolder.WriteText(FileName, json);
             }
 
             try
             {
-                StoredExemptions stored = JsonSerializer.Deserialize<StoredExemptions>(json) ?? new();
-                items.UnionWith(stored.Items.Where(item => !string.IsNullOrWhiteSpace(item)).Select(item => item.Trim()));
+                items.UnionWith(Parse(json));
             }
             catch (JsonException exception)
             {
                 MelonLogger.Warning($"{FileName} is not valid JSON ({exception.Message}); using the default exemptions");
-                items.UnionWith(mDefaultItems);
+                items.UnionWith(Parse(DefaultJson()));
             }
             return items;
+        }
+
+
+        private static IEnumerable<string> Parse(string json)
+        {
+            StoredExemptions stored = JsonSerializer.Deserialize<StoredExemptions>(json) ?? new();
+            return stored.Items.Where(item => !string.IsNullOrWhiteSpace(item)).Select(item => item.Trim());
+        }
+
+
+        private static string DefaultJson()
+        {
+            Assembly assembly = typeof(BanExemptions).Assembly;
+            string resourceName = assembly.GetManifestResourceNames().First(name => name.EndsWith(FileName, StringComparison.OrdinalIgnoreCase));
+            using StreamReader reader = new(assembly.GetManifestResourceStream(resourceName));
+            return reader.ReadToEnd();
         }
     }
 }
