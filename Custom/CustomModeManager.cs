@@ -44,7 +44,11 @@ namespace Trespasser
 
         public bool ShouldSetValuesToMatchXPMode(Panel_CustomXPSetup panel)
         {
-            if (panel.m_XPModePopupList?.value != CustomLevels.LevelLabel) return true;
+            if (panel.m_XPModePopupList?.value != CustomLevels.LevelLabel)
+            {
+                mLootActive = false;
+                return true;
+            }
 
             CustomExperienceMode customMode = panel.m_CustomMode;
             string[] baseCodes = panel.m_BaseXPModeCustomStrings;
