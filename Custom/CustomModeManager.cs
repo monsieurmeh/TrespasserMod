@@ -13,6 +13,7 @@ namespace Trespasser
         private const int VanillaLootLevelCount = 4;
         private const int InterloperBaseCodeIndex = 3;
         private const int LootShownIndex = 1;
+        private const int PresetShownIndex = 3;
 
         private TrespasserManager mManager;
         private CustomLevels mLevels;
@@ -23,6 +24,7 @@ namespace Trespasser
         private List<string> mHandoffTunables = new();
         private bool mLootActive;
         private bool mIsReadingFromUI;
+        private bool mIsPresetLevelHidden;
 
         public CustomModeManager(TrespasserManager manager)
         {
@@ -38,8 +40,8 @@ namespace Trespasser
             if (lootCombo?.items != null && !lootCombo.items.Contains(CustomLevels.MediumLow) && lootCombo.items.Count == VanillaLootLevelCount)
                 lootCombo.items.Insert(LootShownIndex, CustomLevels.MediumLow);
             ConsoleComboBox presetCombo = panel.m_XPModePopupList;
-            if (presetCombo?.items != null && !presetCombo.items.Contains(CustomLevels.LevelLabel))
-                presetCombo.items.Add(CustomLevels.LevelLabel);
+            if (presetCombo?.items != null && !presetCombo.items.Contains(CustomLevels.LevelLabel) && presetCombo.items.Count > PresetShownIndex)
+                presetCombo.items.Insert(PresetShownIndex, CustomLevels.LevelLabel);
         }
 
 
@@ -48,6 +50,7 @@ namespace Trespasser
             if (panel.m_XPModePopupList?.value != CustomLevels.LevelLabel)
             {
                 mLootActive = false;
+                HidePresetLevel(panel);
                 return true;
             }
 
@@ -64,8 +67,28 @@ namespace Trespasser
         }
 
 
+        public void HidePresetLevel(Panel_CustomXPSetup panel)
+        {
+            ConsoleComboBox presetCombo = panel.m_XPModePopupList;
+            if (presetCombo?.items == null || !presetCombo.items.Remove(CustomLevels.LevelLabel)) return;
+            presetCombo.m_CurrentIndex = presetCombo.items.IndexOf(presetCombo.value);
+            mIsPresetLevelHidden = true;
+        }
+
+
+        public void ShowPresetLevel(Panel_CustomXPSetup panel)
+        {
+            ConsoleComboBox presetCombo = panel.m_XPModePopupList;
+            if (!mIsPresetLevelHidden || presetCombo?.items == null) return;
+            mIsPresetLevelHidden = false;
+            presetCombo.items.Insert(PresetShownIndex, CustomLevels.LevelLabel);
+            presetCombo.m_CurrentIndex = presetCombo.items.IndexOf(presetCombo.value);
+        }
+
+
         public void ShowPresetWhenMatching(Panel_CustomXPSetup panel)
         {
+            ShowPresetLevel(panel);
             CustomExperienceMode customMode = panel.m_CustomMode;
             ConsoleComboBox presetCombo = panel.m_XPModePopupList;
             if (customMode == null || presetCombo?.items == null || !presetCombo.items.Contains(CustomLevels.LevelLabel)) return;

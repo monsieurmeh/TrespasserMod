@@ -61,12 +61,16 @@ namespace Trespasser
         internal static class PanelCustomXPSetup_ApplyTrespasserPreset
         {
             internal static bool Prefix(Panel_CustomXPSetup __instance) => TrespasserManager.Instance.CustomModeManager.ShouldSetValuesToMatchXPMode(__instance);
+
+            internal static void Postfix(Panel_CustomXPSetup __instance) => TrespasserManager.Instance.CustomModeManager.ShowPresetLevel(__instance);
         }
 
 
         [HarmonyPatch(typeof(Panel_CustomXPSetup), nameof(Panel_CustomXPSetup.SetXPModePopupListString))]
         internal static class PanelCustomXPSetup_ShowTrespasserPreset
         {
+            internal static void Prefix(Panel_CustomXPSetup __instance) => TrespasserManager.Instance.CustomModeManager.HidePresetLevel(__instance);
+
             internal static void Postfix(Panel_CustomXPSetup __instance) => TrespasserManager.Instance.CustomModeManager.ShowPresetWhenMatching(__instance);
         }
 
