@@ -72,18 +72,18 @@ namespace Trespasser
 
 
         [HarmonyPatch(typeof(Panel_CustomXPSetup), nameof(Panel_CustomXPSetup.SetCustomXPSettingsFromUI))]
-        internal static class PanelCustomXPSetup_ReadTrespasserLoot
+        internal static class PanelCustomXPSetup_ReadTrespasserLevels
         {
-            internal static void Prefix(Panel_CustomXPSetup __instance) => TrespasserManager.Instance.CustomModeManager.BeginReadLootFromUI(__instance);
+            internal static void Prefix(Panel_CustomXPSetup __instance) => TrespasserManager.Instance.CustomModeManager.BeginReadFromUI(__instance);
 
-            internal static void Postfix(Panel_CustomXPSetup __instance) => TrespasserManager.Instance.CustomModeManager.EndReadLootFromUI(__instance);
+            internal static void Postfix(Panel_CustomXPSetup __instance) => TrespasserManager.Instance.CustomModeManager.EndReadFromUI(__instance);
         }
 
 
         [HarmonyPatch(typeof(Panel_CustomXPSetup), nameof(Panel_CustomXPSetup.SetUIFromCurrentCustomXP))]
-        internal static class PanelCustomXPSetup_ShowTrespasserLoot
+        internal static class PanelCustomXPSetup_ShowTrespasserLevels
         {
-            internal static void Postfix(Panel_CustomXPSetup __instance) => TrespasserManager.Instance.CustomModeManager.ShowLootInUI(__instance);
+            internal static void Postfix(Panel_CustomXPSetup __instance) => TrespasserManager.Instance.CustomModeManager.ShowInUI(__instance);
         }
 
 

@@ -12,6 +12,7 @@ namespace Trespasser
         private const string LootToken = "BaseResourceAvailability";
         private const int VanillaLootLevelCount = 4;
         private const int InterloperBaseCodeIndex = 3;
+        private const int LootShownIndex = 1;
 
         private TrespasserManager mManager;
         private CustomLevels mLevels;
@@ -21,7 +22,7 @@ namespace Trespasser
         private string? mHandoffCode;
         private List<string> mHandoffTunables = new();
         private bool mLootActive;
-        private bool mIsTranslatingLootCombo;
+        private bool mIsReadingFromUI;
 
         public CustomModeManager(TrespasserManager manager)
         {
@@ -34,8 +35,8 @@ namespace Trespasser
         {
             mLevels.AddOptions(panel);
             ConsoleComboBox lootCombo = panel.m_BaseDifficultyPopupList;
-            if (lootCombo?.items != null && !lootCombo.items.Contains(CustomLevels.LevelLabel) && lootCombo.items.Count == VanillaLootLevelCount)
-                lootCombo.items.Add(CustomLevels.LevelLabel);
+            if (lootCombo?.items != null && !lootCombo.items.Contains(CustomLevels.MediumLow) && lootCombo.items.Count == VanillaLootLevelCount)
+                lootCombo.items.Insert(LootShownIndex, CustomLevels.MediumLow);
             ConsoleComboBox presetCombo = panel.m_XPModePopupList;
             if (presetCombo?.items != null && !presetCombo.items.Contains(CustomLevels.LevelLabel))
                 presetCombo.items.Add(CustomLevels.LevelLabel);
@@ -76,30 +77,37 @@ namespace Trespasser
         public bool IsTrespasserLootActive() => mLootActive && CurrentCustomMode() != null;
 
 
-        public void BeginReadLootFromUI(Panel_CustomXPSetup panel)
+        public void BeginReadFromUI(Panel_CustomXPSetup panel)
         {
+            if (mIsReadingFromUI) return;
+            mIsReadingFromUI = true;
+            mLevels.BeginReadFromUI(panel);
             ConsoleComboBox lootCombo = panel.m_BaseDifficultyPopupList;
-            if (lootCombo == null || mIsTranslatingLootCombo) return;
-            mLootActive = lootCombo.value == CustomLevels.LevelLabel;
-            if (!mLootActive) return;
-            mIsTranslatingLootCombo = true;
-            lootCombo.value = lootCombo.items[0];
+            if (lootCombo?.items == null || !lootCombo.items.Contains(CustomLevels.MediumLow)) return;
+            mLootActive = lootCombo.m_CurrentIndex == LootShownIndex;
+            if (lootCombo.m_CurrentIndex >= LootShownIndex) lootCombo.m_CurrentIndex--;
         }
 
 
-        public void EndReadLootFromUI(Panel_CustomXPSetup panel)
+        public void EndReadFromUI(Panel_CustomXPSetup panel)
         {
-            if (!mIsTranslatingLootCombo) return;
-            panel.m_BaseDifficultyPopupList.value = CustomLevels.LevelLabel;
-            mIsTranslatingLootCombo = false;
+            if (!mIsReadingFromUI) return;
+            mLevels.EndReadFromUI(panel);
+            ConsoleComboBox lootCombo = panel.m_BaseDifficultyPopupList;
+            if (lootCombo?.items != null)
+                lootCombo.m_CurrentIndex = lootCombo.items.IndexOf(lootCombo.value);
+            mIsReadingFromUI = false;
         }
 
 
-        public void ShowLootInUI(Panel_CustomXPSetup panel)
+        public void ShowInUI(Panel_CustomXPSetup panel)
         {
+            mLevels.ShowInUI(panel);
             ConsoleComboBox lootCombo = panel.m_BaseDifficultyPopupList;
-            if (mLootActive && lootCombo?.items != null && lootCombo.items.Contains(CustomLevels.LevelLabel))
-                lootCombo.value = CustomLevels.LevelLabel;
+            CustomExperienceMode customMode = panel.m_CustomMode;
+            if (customMode == null || lootCombo?.items == null || !lootCombo.items.Contains(CustomLevels.MediumLow)) return;
+            int level = Convert.ToInt32(customMode.m_BaseResourceAvailability);
+            lootCombo.value = mLootActive ? CustomLevels.MediumLow : lootCombo.items[level < LootShownIndex ? level : level + 1];
         }
 
 
